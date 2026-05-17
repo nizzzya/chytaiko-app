@@ -1,10 +1,8 @@
-import { ScreenPlaceholder } from '../shared/ScreenPlaceholder';
+import { loginWithEmail } from '../../services/firebase/authService';
+import { AuthForm } from './AuthForm';
 
 export function LoginScreen() {
   return (
-    <ScreenPlaceholder
-      title="Вхід"
-      subtitle="Екран авторизації — незабаром"
-    />
+    <AuthForm title="Вхід" submitLabel="Увійти" onSubmit={loginWithEmail} />
   );
 }

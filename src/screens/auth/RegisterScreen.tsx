@@ -1,10 +1,12 @@
-import { ScreenPlaceholder } from '../shared/ScreenPlaceholder';
+import { registerWithEmail } from '../../services/firebase/authService';
+import { AuthForm } from './AuthForm';
 
 export function RegisterScreen() {
   return (
-    <ScreenPlaceholder
+    <AuthForm
       title="Реєстрація"
-      subtitle="Екран реєстрації — незабаром"
+      submitLabel="Зареєструватися"
+      onSubmit={registerWithEmail}
     />
   );
 }
