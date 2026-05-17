@@ -1,9 +1,9 @@
 import type { Story, StoryPage } from '../../../types/story';
 import { mockStories, mockStoryPages } from '../data/mockStories';
 
-/** Published stories only — mirrors future Firestore catalog filter. */
+/** Active stories only — mirrors future Firestore catalog filter. */
 export function getMockStories(): Story[] {
-  return mockStories.filter((story) => story.status === 'published');
+  return mockStories.filter((story) => story.status === 'active');
 }
 
 export function getMockStoryById(id: string): Story | undefined {

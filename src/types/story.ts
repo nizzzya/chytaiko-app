@@ -1,5 +1,5 @@
-/** Catalog visibility — MVP reads `published` only (TECHNICAL_PASSPORT §17). */
-export type StoryStatus = 'draft' | 'published';
+/** Catalog visibility — MVP reads `active` only (TECHNICAL_PASSPORT §17). */
+export type StoryStatus = 'draft' | 'active';
 
 export type StoryAgeGroup = '4+' | '5+' | '6+';
 
