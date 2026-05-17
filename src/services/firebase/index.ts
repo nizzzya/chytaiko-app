@@ -1,1 +1,11 @@
-// Firebase integration — Phase 2 (see docs/TECHNICAL_PASSPORT.md §14, §25)
+export {
+  firebaseEnv,
+  getFirebaseConfig,
+  getMissingFirebaseEnvKeys,
+  isFirebaseConfigured,
+} from './config';
+
+export { getFirebaseApp } from './app';
+export { getFirebaseAuth } from './auth';
+export { getFirebaseFirestore } from './firestore';
+export { getFirebaseStorage } from './storage';
