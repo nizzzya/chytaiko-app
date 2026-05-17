@@ -1,1 +1,5 @@
-// Stories feature — Phase 4 (see docs/TECHNICAL_PASSPORT.md §14)
+export {
+  getMockStories,
+  getMockStoryById,
+  getMockStoryPages,
+} from './services/storyMockService';
