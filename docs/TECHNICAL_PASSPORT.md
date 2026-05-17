@@ -262,11 +262,11 @@ story-id/
 
 cover.webp
 
-page-1.webp
+page-001.webp
 
-page-2.webp
+page-002.webp
 
-page-3.webp
+page-003.webp
 
 Future:
 
