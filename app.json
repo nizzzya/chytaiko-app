@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "Chytayko",
+    "slug": "chytaiko",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "main": "index.ts",
+    "scheme": "chytaiko"
+  }
+}
