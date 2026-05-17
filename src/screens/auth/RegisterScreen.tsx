@@ -1,10 +1,22 @@
-import { ScreenPlaceholder } from '../shared/ScreenPlaceholder';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-export function RegisterScreen() {
+import { registerWithEmail } from '../../services/firebase/authService';
+import type { RootStackParamList } from '../../navigation/types';
+import { AuthForm } from './AuthForm';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
+
+export function RegisterScreen({ navigation }: Props) {
   return (
-    <ScreenPlaceholder
+    <AuthForm
       title="Реєстрація"
-      subtitle="Екран реєстрації — незабаром"
+      submitLabel="Зареєструватися"
+      onSubmit={registerWithEmail}
+      onSuccess={() => navigation.replace('Home')}
+      alternateAction={{
+        label: 'Увійти',
+        onPress: () => navigation.navigate('Login'),
+      }}
     />
   );
 }
