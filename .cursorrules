@@ -531,6 +531,34 @@ Request confirmation.
 
 ---
 
+## COMMAND EXECUTION RULES
+
+Cursor MUST NOT run:
+
+- git commands
+- npm install
+- npm audit fix
+- npm audit fix --force
+- npm start
+- npx expo start
+- expo-doctor
+- tsc
+- tsc --noEmit
+- lint
+- tests
+- build commands
+- Metro
+- emulator commands
+- simulator commands
+
+Cursor may only edit files.
+
+After each change, Cursor must tell the user what command the user should run manually.
+
+Cursor must never claim that something “passes” unless the user has run the command and provided the result.
+
+---
+
 ## OUTPUT RULES
 
 Output only:
@@ -538,6 +566,8 @@ Output only:
 Files changed
 
 Changes
+
+Manual checks for user
 
 No explanations.
 
