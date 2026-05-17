@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { AppButton, AppScreen, AppText } from '../../components/ui';
 import { useAppTheme, type AppTheme } from '../../theme';
 
 type ScreenPlaceholderProps = {
@@ -20,57 +21,44 @@ export function ScreenPlaceholder({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-      {actionLabel && onAction ? (
-        <Pressable
-          onPress={onAction}
-          style={({ pressed }) => [
-            styles.button,
-            pressed && { opacity: theme.opacity.pressed },
-          ]}
-        >
-          <Text style={styles.buttonLabel}>{actionLabel}</Text>
-        </Pressable>
-      ) : null}
-    </View>
+    <AppScreen centered>
+      <View style={styles.content}>
+        <AppText variant="h1" style={styles.title}>
+          {title}
+        </AppText>
+        {subtitle ? (
+          <AppText variant="body" color="secondary" style={styles.subtitle}>
+            {subtitle}
+          </AppText>
+        ) : null}
+        {actionLabel && onAction ? (
+          <AppButton
+            label={actionLabel}
+            onPress={onAction}
+            style={styles.button}
+          />
+        ) : null}
+      </View>
+    </AppScreen>
   );
 }
 
 function createStyles(theme: AppTheme) {
   return StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-      paddingHorizontal: theme.layout.screenPadding,
-      justifyContent: 'center',
+    content: {
       alignItems: 'center',
+      width: '100%',
     },
     title: {
-      ...theme.typography.h1,
-      color: theme.colors.textPrimary,
       textAlign: 'center',
     },
     subtitle: {
-      ...theme.typography.body,
-      color: theme.colors.textSecondary,
       marginTop: theme.spacing.space_2,
       textAlign: 'center',
     },
     button: {
       marginTop: theme.spacing.space_8,
-      backgroundColor: theme.colors.primary,
-      paddingVertical: theme.spacing.space_3,
-      paddingHorizontal: theme.spacing.space_6,
-      borderRadius: theme.radius.radius_md,
-      minHeight: 48,
-      justifyContent: 'center',
-    },
-    buttonLabel: {
-      ...theme.typography.body,
-      fontWeight: '500',
-      color: theme.colors.textPrimary,
+      alignSelf: 'stretch',
     },
   });
 }
