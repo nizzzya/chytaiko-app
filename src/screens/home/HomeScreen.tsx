@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   AppButton,
@@ -10,9 +11,12 @@ import {
   AppScreen,
   AppText,
 } from '../../components/ui';
+import type { RootStackParamList } from '../../navigation/types';
 import { useAppTheme, type AppTheme } from '../../theme';
 
-export function HomeScreen() {
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+
+export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -29,14 +33,35 @@ export function HomeScreen() {
           </AppText>
         </View>
 
+        <View style={styles.navSection}>
+          <AppText variant="caption" color="muted">
+            Навігація (тест)
+          </AppText>
+          <AppButton
+            label="Профіль"
+            variant="secondary"
+            onPress={() => navigation.navigate('Profile')}
+          />
+          <AppButton
+            label="Обране"
+            variant="secondary"
+            onPress={() => navigation.navigate('Favorites')}
+          />
+          <AppButton
+            label="Reader demo"
+            variant="secondary"
+            onPress={() => navigation.navigate('Reader')}
+          />
+          <AppButton
+            label="Story details demo"
+            variant="secondary"
+            onPress={() => navigation.navigate('StoryDetails')}
+          />
+        </View>
+
         <AppCard style={styles.card}>
           <AppText variant="h3">Каталог казок</AppText>
         </AppCard>
-
-        <View style={styles.buttons}>
-          <AppButton label="Відкрити казки" variant="primary" />
-          <AppButton label="Обране" variant="secondary" />
-        </View>
 
         <View style={styles.chips}>
           <AppChip label="4+" selected />
@@ -77,11 +102,11 @@ function createStyles(theme: AppTheme) {
     subtitle: {
       marginTop: theme.spacing.space_1,
     },
+    navSection: {
+      gap: theme.spacing.space_3,
+    },
     card: {
       marginTop: theme.spacing.space_2,
-    },
-    buttons: {
-      gap: theme.spacing.space_3,
     },
     chips: {
       flexDirection: 'row',
