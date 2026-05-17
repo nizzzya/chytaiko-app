@@ -1,18 +1,37 @@
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { AppButton, AppScreen, AppText } from '../../components/ui';
 import { useAppTheme, type AppTheme } from '../../theme';
 import type { AuthResult, AuthUser } from '../../types/auth';
 import { AuthTextField } from './AuthTextField';
 
+type AuthAlternateAction = {
+  label: string;
+  onPress: () => void;
+};
+
 type AuthFormProps = {
   title: string;
   submitLabel: string;
   onSubmit: (email: string, password: string) => Promise<AuthResult<AuthUser>>;
+  onSuccess: () => void;
+  alternateAction?: AuthAlternateAction;
 };
 
-export function AuthForm({ title, submitLabel, onSubmit }: AuthFormProps) {
+export function AuthForm({
+  title,
+  submitLabel,
+  onSubmit,
+  onSuccess,
+  alternateAction,
+}: AuthFormProps) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -31,7 +50,10 @@ export function AuthForm({ title, submitLabel, onSubmit }: AuthFormProps) {
 
     if (!result.success) {
       setErrorMessage(result.error.message);
+      return;
     }
+
+    onSuccess();
   };
 
   return (
@@ -76,6 +98,21 @@ export function AuthForm({ title, submitLabel, onSubmit }: AuthFormProps) {
           disabled={loading}
           style={styles.submit}
         />
+
+        {alternateAction ? (
+          <Pressable
+            onPress={alternateAction.onPress}
+            disabled={loading}
+            style={({ pressed }) => [
+              styles.alternate,
+              pressed && { opacity: theme.opacity.pressed },
+            ]}
+          >
+            <AppText variant="body" color="secondary" style={styles.alternateText}>
+              {alternateAction.label}
+            </AppText>
+          </Pressable>
+        ) : null}
       </KeyboardAvoidingView>
     </AppScreen>
   );
@@ -99,6 +136,14 @@ function createStyles(theme: AppTheme) {
     },
     submit: {
       marginTop: theme.spacing.space_6,
+    },
+    alternate: {
+      marginTop: theme.spacing.space_4,
+      alignSelf: 'center',
+      paddingVertical: theme.spacing.space_2,
+    },
+    alternateText: {
+      textAlign: 'center',
     },
   });
 }
