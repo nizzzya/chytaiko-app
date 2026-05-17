@@ -1,0 +1,586 @@
+# .cursorrules
+
+# CHYTAYKO MASTER CONTRACT
+# Mobile application
+# Stack: Expo + React Native + Firebase
+# Product: Chytayko
+# Source of truth:
+# - docs/TECHNICAL_PASSPORT.md
+# - docs/DESIGN_CODE.md
+
+---
+
+## ROLE
+
+You are working on Chytayko.
+
+Chytayko is:
+
+- mobile application
+- portfolio project
+- reading-first experience
+- parents + children (4+)
+- Expo application
+- React Native application
+- Firebase backend
+
+You are NOT building:
+
+- SaaS
+- marketplace
+- social network
+- admin system
+- AI platform
+- payment product
+
+Primary goal:
+
+Build stable MVP only.
+
+Never expand scope.
+
+---
+
+## SOURCE OF TRUTH
+
+Always read first:
+
+1. docs/TECHNICAL_PASSPORT.md
+2. docs/DESIGN_CODE.md
+
+Priority:
+
+TECHNICAL_PASSPORT:
+
+controls
+
+- product
+- architecture
+- Firebase
+- storage
+- flows
+- naming
+- MVP limits
+
+DESIGN_CODE:
+
+controls
+
+- UI
+- UX
+- themes
+- colors
+- reader
+- motion
+- illustrations
+- accessibility
+
+Never violate these documents.
+
+If conflict exists:
+
+TECHNICAL_PASSPORT wins for architecture.
+
+DESIGN_CODE wins for UI.
+
+---
+
+## STACK FREEZE
+
+Frozen stack:
+
+Expo
+
+React Native
+
+Firebase Auth
+
+Firestore
+
+Firebase Storage
+
+Allowed:
+
+TypeScript
+
+Expo Router
+
+React Navigation
+
+NativeWind
+
+React Query
+
+Forbidden:
+
+Backend server
+
+Node API
+
+Express
+
+Nest
+
+Microservices
+
+PostgreSQL
+
+MongoDB
+
+Redis
+
+Docker
+
+Payments
+
+Subscriptions
+
+AI integrations
+
+Push notifications
+
+Offline mode
+
+Admin panel
+
+Cloud Functions
+
+Scope expansion
+
+Do not introduce new technologies without request.
+
+---
+
+## ARCHITECTURE RULES
+
+Use feature architecture only.
+
+Preferred structure:
+
+src/
+
+app/
+
+components/
+
+features/
+
+auth/
+
+stories/
+
+reader/
+
+favorites/
+
+profile/
+
+services/
+
+firebase/
+
+theme/
+
+tokens/
+
+hooks/
+
+types/
+
+utils/
+
+assets/
+
+Rules:
+
+No business logic in screens.
+
+Firebase access only inside services.
+
+No direct Firestore calls inside UI.
+
+Use reusable components.
+
+Avoid coupling.
+
+Prefer composition.
+
+No screen hacks.
+
+No duplicate logic.
+
+---
+
+## FIREBASE RULES
+
+Use only:
+
+Auth
+
+Firestore
+
+Storage
+
+Rules:
+
+No open collections.
+
+No public writes.
+
+Favorites:
+
+owner only
+
+Progress:
+
+owner only
+
+Users:
+
+owner only
+
+Stories:
+
+read only
+
+Pages:
+
+read only
+
+Storage:
+
+WEBP only
+
+Sequential naming:
+
+page-001.webp
+
+page-002.webp
+
+page-003.webp
+
+Never:
+
+allow read, write: if true;
+
+Never expose secrets.
+
+Never hardcode IDs.
+
+Never bypass ownership.
+
+---
+
+## UI RULES
+
+Follow:
+
+Nordic Quiet Minimal
+
+Themes:
+
+Nordic Paper
+
+Night Story
+
+Reader-first UX.
+
+Always support:
+
+Light mode
+
+Dark mode
+
+Use tokens only.
+
+No hardcoded colors.
+
+No inline spacing.
+
+No random typography.
+
+No visual experiments.
+
+Forbidden:
+
+Disney style
+
+Game UI
+
+Bank UI
+
+Government style
+
+Neon
+
+Heavy gradients
+
+Glassmorphism overload
+
+Visual chaos
+
+Tiny buttons
+
+Dense layouts
+
+Reader clutter
+
+---
+
+## READER RULES
+
+Reader is highest priority screen.
+
+Reader must:
+
+Feel calm
+
+Support bedtime reading
+
+Use large text
+
+Use soft contrast
+
+Hide bottom navigation
+
+Support dark mode
+
+Allow page navigation
+
+Allow progress
+
+Allow favorite
+
+Forbidden:
+
+Ads
+
+Gamification
+
+Toolbar overload
+
+Bright controls
+
+Complex menus
+
+Multiple actions
+
+Visual noise
+
+Reader experience wins over all other screens.
+
+---
+
+## DESIGN IMPLEMENTATION RULES
+
+Use:
+
+Color tokens
+
+Spacing tokens
+
+Radius tokens
+
+Typography tokens
+
+Motion tokens
+
+Illustration contract
+
+Accessibility rules
+
+Never create new theme systems.
+
+Never add new palettes.
+
+Never change typography scale.
+
+Never reduce touch targets.
+
+Keep:
+
+Large spacing
+
+Air
+
+Calm interaction
+
+Minimal motion
+
+---
+
+## TEXT RULES
+
+Language:
+
+Ukrainian only for MVP.
+
+Future:
+
+Norwegian
+
+English
+
+Rules:
+
+No inline strings.
+
+Centralize text.
+
+Avoid duplication.
+
+Avoid mixed languages.
+
+---
+
+## PERFORMANCE RULES
+
+Images:
+
+WEBP only
+
+100–200 KB preferred
+
+Use lazy loading.
+
+Never load all stories.
+
+Use pagination.
+
+Avoid:
+
+PNG
+
+Large assets
+
+Repeated downloads
+
+Heavy backgrounds
+
+Full library fetch
+
+---
+
+## DEVELOPMENT RULES
+
+Build order:
+
+1. Project setup
+
+2. Theme system
+
+3. Navigation
+
+4. Firebase
+
+5. Authentication
+
+6. Stories
+
+7. Story details
+
+8. Reader
+
+9. Favorites
+
+10. Progress
+
+11. Profile
+
+12. Polish
+
+No skipping.
+
+No parallel scope expansion.
+
+One feature at a time.
+
+Finish before moving.
+
+---
+
+## CHANGE RULES
+
+Before changing anything:
+
+Read:
+
+TECHNICAL_PASSPORT
+
+↓
+
+Read:
+
+DESIGN_CODE
+
+↓
+
+Check:
+
+Nordic Quiet Minimal
+
+↓
+
+Implement
+
+If feature is outside MVP:
+
+STOP
+
+Request confirmation.
+
+---
+
+## OUTPUT RULES
+
+Output only:
+
+Files changed
+
+Changes
+
+No explanations.
+
+No feature ideas.
+
+No expansion proposals.
+
+No extra architecture.
+
+No unsolicited refactoring.
+
+---
+
+## FREEZE
+
+Frozen:
+
+Expo
+
+React Native
+
+Firebase
+
+Reader-first UX
+
+Nordic Quiet Minimal
+
+Parents + children 4+
+
+UA MVP
+
+No backend
+
+No AI
+
+No payments
+
+No subscriptions
+
+No admin panel
+
+Expansion allowed only after MVP completion.
+
+---
+
+CHYTAYKO_CURSOR_CONTRACT v1.0
