@@ -1,1 +1,5 @@
-// Reader feature — Phase 5 (see docs/TECHNICAL_PASSPORT.md §14)
+export {
+  getProgress,
+  markCompleted,
+  saveProgress,
+} from './services/mockReadingProgressService';

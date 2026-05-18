@@ -4,8 +4,8 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
-  StoryDetails: undefined;
-  Reader: undefined;
+  StoryDetails: { storyId: string };
+  Reader: { storyId: string };
   Favorites: undefined;
   Profile: undefined;
 };
