@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppButton, AppScreen, AppText } from '../../components/ui';
@@ -14,91 +14,133 @@ export function ProfileScreen({ navigation }: Props) {
   const { user } = useAuth();
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleLogout = async () => {
-    setErrorMessage(null);
     setLoading(true);
-
-    const result = await logout();
-
+    await logout();
     setLoading(false);
-
-    if (!result.success) {
-      setErrorMessage(result.error.message);
-    }
   };
 
   return (
-    <AppScreen>
-      <View style={styles.content}>
-        <AppText variant="h2">Профіль</AppText>
+    <AppScreen padded={false}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <AppText variant="h1">Профіль</AppText>
 
         {user ? (
-          <>
-            {user.email ? (
-              <AppText variant="body" color="secondary" style={styles.email}>
-                {user.email}
-              </AppText>
-            ) : null}
-            <AppText variant="body" color="muted" style={styles.hint}>
-              Налаштування — незабаром
-            </AppText>
-            {errorMessage ? (
-              <AppText variant="caption" color="error" style={styles.error}>
-                {errorMessage}
-              </AppText>
-            ) : null}
-            <AppButton
-              label="Вийти"
-              variant="secondary"
-              onPress={handleLogout}
-              loading={loading}
-              disabled={loading}
-              style={styles.action}
-            />
-          </>
+          <LoggedInContent
+            email={user.email}
+            styles={styles}
+            loading={loading}
+            onLogout={handleLogout}
+          />
         ) : (
-          <>
-            <AppText variant="body" color="secondary" style={styles.hint}>
-              Увійдіть, щоб зберегти обране та прогрес на всіх пристроях.
-            </AppText>
-            <AppButton
-              label="Увійти"
-              onPress={() => navigation.navigate('Login')}
-              style={styles.action}
-            />
-            <AppButton
-              label="Створити акаунт"
-              variant="secondary"
-              onPress={() => navigation.navigate('Register')}
-              style={styles.action}
-            />
-          </>
+          <LoggedOutContent
+            styles={styles}
+            onLogin={() => navigation.navigate('Login')}
+            onRegister={() => navigation.navigate('Register')}
+          />
         )}
-      </View>
+
+        <AppButton
+          label="До каталогу"
+          variant="secondary"
+          onPress={() => navigation.navigate('Home')}
+          style={styles.catalogButton}
+        />
+      </ScrollView>
     </AppScreen>
+  );
+}
+
+type LoggedOutContentProps = {
+  styles: ReturnType<typeof createStyles>;
+  onLogin: () => void;
+  onRegister: () => void;
+};
+
+function LoggedOutContent({ styles, onLogin, onRegister }: LoggedOutContentProps) {
+  return (
+    <View style={styles.section}>
+      <AppText variant="body" color="secondary" style={styles.message}>
+        Обліковий запис не потрібен для читання казок.
+      </AppText>
+      <AppText variant="body" color="secondary">
+        Він знадобиться пізніше для синхронізації обраного та прогресу.
+      </AppText>
+      <AppButton label="Увійти" onPress={onLogin} style={styles.action} />
+      <AppButton
+        label="Створити акаунт"
+        variant="secondary"
+        onPress={onRegister}
+        style={styles.action}
+      />
+    </View>
+  );
+}
+
+type LoggedInContentProps = {
+  email: string | null;
+  styles: ReturnType<typeof createStyles>;
+  loading: boolean;
+  onLogout: () => void;
+};
+
+function LoggedInContent({
+  email,
+  styles,
+  loading,
+  onLogout,
+}: LoggedInContentProps) {
+  return (
+    <View style={styles.section}>
+      {email ? (
+        <AppText variant="bodyLarge" style={styles.email}>
+          {email}
+        </AppText>
+      ) : null}
+      <AppText variant="body" color="secondary" style={styles.message}>
+        Читання доступне і без входу. Акаунт буде використано для майбутньої
+        синхронізації.
+      </AppText>
+      <AppButton
+        label="Вийти"
+        variant="secondary"
+        onPress={onLogout}
+        loading={loading}
+        disabled={loading}
+        style={styles.action}
+      />
+    </View>
   );
 }
 
 function createStyles(theme: AppTheme) {
   return StyleSheet.create({
-    content: {
-      flex: 1,
+    scroll: {
+      flexGrow: 1,
+      paddingHorizontal: theme.layout.screenPadding,
       paddingTop: theme.spacing.space_4,
+      paddingBottom: theme.spacing.space_16,
     },
-    email: {
+    section: {
+      marginTop: theme.spacing.space_6,
+      gap: theme.spacing.space_3,
+    },
+    message: {
       marginTop: theme.spacing.space_2,
     },
-    hint: {
-      marginTop: theme.spacing.space_4,
-    },
-    error: {
-      marginTop: theme.spacing.space_4,
+    email: {
+      marginBottom: theme.spacing.space_2,
     },
     action: {
-      marginTop: theme.spacing.space_6,
+      marginTop: theme.spacing.space_4,
+    },
+    catalogButton: {
+      marginTop: theme.spacing.space_10,
     },
   });
 }
