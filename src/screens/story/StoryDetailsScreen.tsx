@@ -22,7 +22,7 @@ import {
 } from '../../features/favorites';
 import { getProgress } from '../../features/reader';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
-import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
+import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { ReadingProgress } from '../../types/readingProgress';
@@ -43,6 +43,7 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const story = getStoryById(storyId);
+  const coverImage = useStoryImageSource(story?.coverImage);
   const [isStoryFavorite, setIsStoryFavorite] = useState(false);
   const [progress, setProgress] = useState<ReadingProgress | null>(null);
   const [hydrationReady, setHydrationReady] = useState(isHydrated());
@@ -117,7 +118,6 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const hasProgress = progress !== null;
   const isCompleted = progress?.completed === true;
   const readButtonLabel = getReadButtonLabel(progress);
-  const coverImage = resolveStoryImageSource(story.coverImage);
 
   return (
     <AppScreen padded={false}>

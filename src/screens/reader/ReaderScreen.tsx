@@ -20,7 +20,7 @@ import {
   markCompleted,
   saveProgress,
 } from '../../features/reader';
-import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
+import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
 import {
   getStoryById,
   getStoryPages,
@@ -164,7 +164,7 @@ function ReaderContent({
   const pageIndex = page.pageNumber;
   const isFirstPage = pageIndex <= 1;
   const isLastPage = pageIndex >= pages.length;
-  const pageImage = resolveStoryImageSource(page.imageUrl);
+  const pageImage = useStoryImageSource(page.imageUrl);
 
   const goToPage = (nextPage: number) => {
     const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
