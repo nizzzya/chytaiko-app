@@ -721,6 +721,17 @@ Content ingestion (stories, pages, images): manual upload via Firebase Console /
 
 ---
 
+## Firebase seed (development only)
+
+- Development uses **test content only** — no final story content before development is explicitly complete.
+- No copyrighted material without clear rights.
+- **Seed collections:** `stories`, `storyPages` only (not `users`, `favorites`, or `readingProgress` in MVP seeding).
+- **Status:** `draft` — hidden from catalog; `active` — visible (see Story status rules above).
+- **Storage naming** (§20): `stories/{story-slug}/cover.webp`, `page-001.webp`, … — **WEBP only**, 3-digit zero-padded page files.
+- No automated seed scripts in the repo; manual Console / CLI ingestion only.
+
+---
+
 # 18. Firestore Access Rules
 
 Target security model when Firestore replaces mocks. **Current MVP app does not require Firestore to read.**
