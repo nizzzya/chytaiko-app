@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   AppButton,
   AppErrorState,
+  AppImage,
   AppLoadingState,
   AppProgress,
   AppScreen,
@@ -19,6 +20,7 @@ import {
   markCompleted,
   saveProgress,
 } from '../../features/reader';
+import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
 import {
   getStoryById,
   getStoryPages,
@@ -162,6 +164,7 @@ function ReaderContent({
   const pageIndex = page.pageNumber;
   const isFirstPage = pageIndex <= 1;
   const isLastPage = pageIndex >= pages.length;
+  const pageImage = resolveStoryImageSource(page.imageUrl);
 
   const goToPage = (nextPage: number) => {
     const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
@@ -202,11 +205,13 @@ function ReaderContent({
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.imageArea}>
-            <AppText variant="caption" color="muted">
-              Ілюстрація
-            </AppText>
-          </View>
+          <AppImage
+            source={pageImage.source}
+            fallbackLabel="Ілюстрація"
+            height={180}
+            collapseWhenUnavailable={pageImage.type === 'missing'}
+            style={styles.pageImage}
+          />
 
           <AppText variant="reader" style={styles.pageText}>
             {page.text}
@@ -310,13 +315,9 @@ function createStyles(theme: AppTheme) {
       paddingBottom: theme.spacing.space_6,
       gap: theme.spacing.space_6,
     },
-    imageArea: {
-      minHeight: 160,
+    pageImage: {
       maxHeight: 220,
       borderRadius: theme.radius.radius_lg,
-      backgroundColor: theme.colors.surfaceMuted,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     pageText: {
       color: theme.colors.textPrimary,

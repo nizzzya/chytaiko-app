@@ -5,8 +5,8 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   AppButton,
-  AppCard,
   AppErrorState,
+  AppImage,
   AppLoadingState,
   AppScreen,
   AppText,
@@ -22,6 +22,7 @@ import {
 } from '../../features/favorites';
 import { getProgress } from '../../features/reader';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
+import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { ReadingProgress } from '../../types/readingProgress';
@@ -116,6 +117,7 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const hasProgress = progress !== null;
   const isCompleted = progress?.completed === true;
   const readButtonLabel = getReadButtonLabel(progress);
+  const coverImage = resolveStoryImageSource(story.coverImage);
 
   return (
     <AppScreen padded={false}>
@@ -123,11 +125,14 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <AppCard style={styles.coverCard}>
-          <AppText variant="caption" color="muted">
-            Обкладинка
-          </AppText>
-        </AppCard>
+        <View style={styles.coverFrame}>
+          <AppImage
+            source={coverImage.source}
+            fallbackLabel="Обкладинка"
+            height={200}
+            style={styles.coverImage}
+          />
+        </View>
 
         <View style={styles.content}>
           <AppText variant="h1">{story.title}</AppText>
@@ -187,13 +192,12 @@ function createStyles(theme: AppTheme) {
     scroll: {
       paddingBottom: theme.spacing.space_16,
     },
-    coverCard: {
-      minHeight: 200,
+    coverFrame: {
       marginHorizontal: theme.layout.screenPadding,
       marginTop: theme.spacing.space_4,
-      backgroundColor: theme.colors.surfaceMuted,
-      justifyContent: 'center',
-      alignItems: 'center',
+    },
+    coverImage: {
+      borderRadius: theme.radius.radius_lg,
     },
     content: {
       paddingHorizontal: theme.layout.screenPadding,

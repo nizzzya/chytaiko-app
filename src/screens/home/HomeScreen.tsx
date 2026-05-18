@@ -7,10 +7,12 @@ import {
   AppChip,
   AppEmptyState,
   AppIconButton,
+  AppImage,
   AppScreen,
   AppText,
 } from '../../components/ui';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
+import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
 import { getStories } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { Story, StoryAgeGroup } from '../../types/story';
@@ -129,9 +131,16 @@ type StoryCatalogCardProps = {
 
 function StoryCatalogCard({ story, styles, onPress }: StoryCatalogCardProps) {
   const categoryLabel = STORY_CATEGORY_LABELS[story.category];
+  const coverImage = resolveStoryImageSource(story.coverImage);
 
   return (
     <AppCard onPress={onPress}>
+      <AppImage
+        source={coverImage.source}
+        fallbackLabel="Обкладинка"
+        height={72}
+        style={styles.cardCover}
+      />
       <AppText variant="h3">{story.title}</AppText>
       <AppText
         variant="body"
@@ -176,6 +185,9 @@ function createStyles(theme: AppTheme) {
     },
     catalog: {
       gap: theme.layout.cardGap,
+    },
+    cardCover: {
+      marginBottom: theme.spacing.space_3,
     },
     cardDescription: {
       marginTop: theme.spacing.space_3,
