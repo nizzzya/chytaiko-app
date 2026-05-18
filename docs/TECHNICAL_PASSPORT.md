@@ -732,6 +732,22 @@ Content ingestion (stories, pages, images): manual upload via Firebase Console /
 
 ---
 
+## Firestore indexes (development foundation only)
+
+Composite indexes live in `firestore.indexes.json` (referenced by `firebase.json`). Deploy with rules when the Firebase project is ready.
+
+| Collection | Index fields |
+|------------|----------------|
+| `stories` | `status` ASC, `createdAt` DESC |
+| `stories` | `status` ASC, `title` ASC |
+| `storyPages` | `storyId` ASC, `pageNumber` ASC |
+| `favorites` | `userId` ASC, `updatedAt` DESC |
+| `readingProgress` | `userId` ASC, `updatedAt` DESC |
+
+MVP catalog queries may sort client-side until Firestore `orderBy` is adopted; indexes are provisioned for near-future server-side queries and cloud sync.
+
+---
+
 # 18. Firestore Access Rules
 
 Target security model when Firestore replaces mocks. **Current MVP app does not require Firestore to read.**
