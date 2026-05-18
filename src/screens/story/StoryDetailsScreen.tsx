@@ -22,7 +22,7 @@ import {
 } from '../../features/favorites';
 import { getProgress } from '../../features/reader';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
-import { resolveStoryAsset } from '../../features/stories/services/storyAssetService';
+import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { ReadingProgress } from '../../types/readingProgress';
@@ -117,7 +117,7 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const hasProgress = progress !== null;
   const isCompleted = progress?.completed === true;
   const readButtonLabel = getReadButtonLabel(progress);
-  const coverSource = resolveStoryAsset(story.coverImage);
+  const coverImage = resolveStoryImageSource(story.coverImage);
 
   return (
     <AppScreen padded={false}>
@@ -127,7 +127,7 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
       >
         <View style={styles.coverFrame}>
           <AppImage
-            source={coverSource}
+            source={coverImage.source}
             fallbackLabel="Обкладинка"
             height={200}
             style={styles.coverImage}

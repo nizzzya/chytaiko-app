@@ -20,7 +20,7 @@ import {
   markCompleted,
   saveProgress,
 } from '../../features/reader';
-import { resolveStoryAsset } from '../../features/stories/services/storyAssetService';
+import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
 import {
   getStoryById,
   getStoryPages,
@@ -164,7 +164,7 @@ function ReaderContent({
   const pageIndex = page.pageNumber;
   const isFirstPage = pageIndex <= 1;
   const isLastPage = pageIndex >= pages.length;
-  const pageImageSource = resolveStoryAsset(page.imageUrl);
+  const pageImage = resolveStoryImageSource(page.imageUrl);
 
   const goToPage = (nextPage: number) => {
     const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
@@ -206,10 +206,10 @@ function ReaderContent({
           showsVerticalScrollIndicator={false}
         >
           <AppImage
-            source={pageImageSource}
+            source={pageImage.source}
             fallbackLabel="Ілюстрація"
             height={180}
-            collapseWhenUnavailable
+            collapseWhenUnavailable={pageImage.type === 'missing'}
             style={styles.pageImage}
           />
 

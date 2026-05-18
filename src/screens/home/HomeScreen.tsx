@@ -12,7 +12,7 @@ import {
   AppText,
 } from '../../components/ui';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
-import { resolveStoryAsset } from '../../features/stories/services/storyAssetService';
+import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
 import { getStories } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { Story, StoryAgeGroup } from '../../types/story';
@@ -131,12 +131,12 @@ type StoryCatalogCardProps = {
 
 function StoryCatalogCard({ story, styles, onPress }: StoryCatalogCardProps) {
   const categoryLabel = STORY_CATEGORY_LABELS[story.category];
-  const coverSource = resolveStoryAsset(story.coverImage);
+  const coverImage = resolveStoryImageSource(story.coverImage);
 
   return (
     <AppCard onPress={onPress}>
       <AppImage
-        source={coverSource}
+        source={coverImage.source}
         fallbackLabel="Обкладинка"
         height={72}
         style={styles.cardCover}
