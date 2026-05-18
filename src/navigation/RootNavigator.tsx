@@ -60,12 +60,12 @@ export function RootNavigator() {
       <Stack.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'Головна' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="StoryDetails"
         component={StoryDetailsScreen}
-        options={{ title: 'Казка' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Reader"
@@ -75,12 +75,12 @@ export function RootNavigator() {
       <Stack.Screen
         name="Favorites"
         component={FavoritesScreen}
-        options={{ title: 'Обране' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ title: 'Профіль' }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
