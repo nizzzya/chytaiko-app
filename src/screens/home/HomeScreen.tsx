@@ -17,7 +17,7 @@ import {
   AppText,
 } from '../../components/ui';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
-import { resolveStoryImageSource } from '../../features/stories/services/storyAssetService';
+import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
 import { getStories } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { Story, StoryAgeGroup } from '../../types/story';
@@ -153,7 +153,7 @@ type StoryCatalogCardProps = {
 
 function StoryCatalogCard({ story, styles, onPress }: StoryCatalogCardProps) {
   const categoryLabel = STORY_CATEGORY_LABELS[story.category];
-  const coverImage = resolveStoryImageSource(story.coverImage);
+  const coverImage = useStoryImageSource(story.coverImage);
 
   return (
     <AppCard onPress={onPress}>
