@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
@@ -19,6 +19,7 @@ import {
   markCompleted,
   saveProgress,
 } from '../../features/reader';
+import { resolveStoryAsset } from '../../features/stories/services/storyAssetService';
 import {
   getStoryById,
   getStoryPages,
@@ -162,6 +163,14 @@ function ReaderContent({
   const pageIndex = page.pageNumber;
   const isFirstPage = pageIndex <= 1;
   const isLastPage = pageIndex >= pages.length;
+  const pageImageSource = resolveStoryAsset(page.imageUrl);
+  const [pageImageFailed, setPageImageFailed] = useState(false);
+
+  useEffect(() => {
+    setPageImageFailed(false);
+  }, [page.id]);
+
+  const showPageImage = pageImageSource !== null && !pageImageFailed;
 
   const goToPage = (nextPage: number) => {
     const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
@@ -202,11 +211,15 @@ function ReaderContent({
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.imageArea}>
-            <AppText variant="caption" color="muted">
-              Ілюстрація
-            </AppText>
-          </View>
+          {showPageImage ? (
+            <Image
+              accessibilityIgnoresInvertColors
+              source={pageImageSource}
+              style={styles.pageImage}
+              resizeMode="contain"
+              onError={() => setPageImageFailed(true)}
+            />
+          ) : null}
 
           <AppText variant="reader" style={styles.pageText}>
             {page.text}
@@ -310,13 +323,12 @@ function createStyles(theme: AppTheme) {
       paddingBottom: theme.spacing.space_6,
       gap: theme.spacing.space_6,
     },
-    imageArea: {
-      minHeight: 160,
+    pageImage: {
+      width: '100%',
+      height: 180,
       maxHeight: 220,
       borderRadius: theme.radius.radius_lg,
       backgroundColor: theme.colors.surfaceMuted,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     pageText: {
       color: theme.colors.textPrimary,

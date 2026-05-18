@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   AppButton,
-  AppCard,
   AppErrorState,
   AppLoadingState,
   AppScreen,
@@ -22,6 +21,7 @@ import {
 } from '../../features/favorites';
 import { getProgress } from '../../features/reader';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
+import { resolveStoryAsset } from '../../features/stories/services/storyAssetService';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { ReadingProgress } from '../../types/readingProgress';
@@ -116,6 +116,7 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const hasProgress = progress !== null;
   const isCompleted = progress?.completed === true;
   const readButtonLabel = getReadButtonLabel(progress);
+  const coverSource = resolveStoryAsset(story.coverImage);
 
   return (
     <AppScreen padded={false}>
@@ -123,11 +124,16 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <AppCard style={styles.coverCard}>
-          <AppText variant="caption" color="muted">
-            Обкладинка
-          </AppText>
-        </AppCard>
+        {coverSource ? (
+          <View style={styles.coverFrame}>
+            <Image
+              accessibilityIgnoresInvertColors
+              source={coverSource}
+              style={styles.coverImage}
+              resizeMode="contain"
+            />
+          </View>
+        ) : null}
 
         <View style={styles.content}>
           <AppText variant="h1">{story.title}</AppText>
@@ -187,13 +193,16 @@ function createStyles(theme: AppTheme) {
     scroll: {
       paddingBottom: theme.spacing.space_16,
     },
-    coverCard: {
-      minHeight: 200,
+    coverFrame: {
       marginHorizontal: theme.layout.screenPadding,
       marginTop: theme.spacing.space_4,
+      borderRadius: theme.radius.radius_lg,
       backgroundColor: theme.colors.surfaceMuted,
-      justifyContent: 'center',
-      alignItems: 'center',
+      overflow: 'hidden',
+    },
+    coverImage: {
+      width: '100%',
+      height: 200,
     },
     content: {
       paddingHorizontal: theme.layout.screenPadding,

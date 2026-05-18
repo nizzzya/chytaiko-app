@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
@@ -11,6 +11,7 @@ import {
   AppText,
 } from '../../components/ui';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
+import { resolveStoryAsset } from '../../features/stories/services/storyAssetService';
 import { getStories } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { Story, StoryAgeGroup } from '../../types/story';
@@ -129,9 +130,18 @@ type StoryCatalogCardProps = {
 
 function StoryCatalogCard({ story, styles, onPress }: StoryCatalogCardProps) {
   const categoryLabel = STORY_CATEGORY_LABELS[story.category];
+  const coverSource = resolveStoryAsset(story.coverImage);
 
   return (
     <AppCard onPress={onPress}>
+      {coverSource ? (
+        <Image
+          accessibilityIgnoresInvertColors
+          source={coverSource}
+          style={styles.cardCover}
+          resizeMode="contain"
+        />
+      ) : null}
       <AppText variant="h3">{story.title}</AppText>
       <AppText
         variant="body"
@@ -176,6 +186,13 @@ function createStyles(theme: AppTheme) {
     },
     catalog: {
       gap: theme.layout.cardGap,
+    },
+    cardCover: {
+      width: '100%',
+      height: 72,
+      marginBottom: theme.spacing.space_3,
+      borderRadius: theme.radius.radius_md,
+      backgroundColor: theme.colors.surfaceMuted,
     },
     cardDescription: {
       marginTop: theme.spacing.space_3,
