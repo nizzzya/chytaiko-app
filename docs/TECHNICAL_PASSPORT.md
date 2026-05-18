@@ -49,8 +49,8 @@ Included:
 - Story details screen
 - Reader mode
 - Page illustrations
-- Favorites (local in-memory MVP)
-- Reading progress (local in-memory MVP)
+- Favorites (local-first MVP, persisted with AsyncStorage)
+- Reading progress (local-first MVP, persisted with AsyncStorage)
 
 **Optional account (Profile):**
 
@@ -91,8 +91,8 @@ Capabilities (MVP):
 - View story catalog
 - Open stories
 - Read pages
-- Add favorites (local device only)
-- Save reading progress (local device only)
+- Add favorites (local device, AsyncStorage — no login)
+- Save reading progress (local device, AsyncStorage — no login)
 - Open Profile and choose Login / Register
 
 No login required.
@@ -220,8 +220,10 @@ Storage (future):
 **MVP local-first (no Firestore required to read):**
 
 - Story catalog → mock service
-- Favorites → in-memory mock
-- Reading progress → in-memory mock
+- Favorites → local mock service, **persisted with AsyncStorage** on device
+- Reading progress → local mock service, **persisted with AsyncStorage** on device
+- Auth is optional; signed-in account may enable **cloud sync in a future phase** (not MVP)
+- Firestore sync for favorites and progress is **future** — not a current MVP requirement
 
 Future:
 
@@ -446,8 +448,9 @@ allow read, write: if true;
 
 **MVP before Firestore:**
 
-- Favorites and progress stay on device (in-memory mock)
+- Favorites and progress stay on device (AsyncStorage via local mock services)
 - No auth check to read stories
+- App must work **without login** and **without Firebase env** for reading
 
 Storage:
 
@@ -512,10 +515,10 @@ Phase 5:
 Reader
 
 Phase 6:
-Favorites (local mock)
+Favorites (local-first, AsyncStorage)
 
 Phase 7:
-Reading progress (local mock)
+Reading progress (local-first, AsyncStorage)
 
 Phase 8:
 Optional auth (Profile, Login, Register)
@@ -540,7 +543,7 @@ No feature expansion before MVP completion.
 
 Possible extensions:
 
-Cloud sync for favorites and reading progress (Firestore, per-account)
+Cloud sync for favorites and reading progress (Firestore, per-account) — **post-MVP; not required for current release**
 
 Firestore-backed story catalog (replace mock service)
 
@@ -738,14 +741,15 @@ Target security model when Firestore replaces mocks. **Current MVP app does not 
 **Global rules:**
 
 - Story catalog and pages: **no auth required to read**
-- Favorites and progress: require auth only when syncing to Firestore (not for local MVP mock)
+- Favorites and progress: require auth only when syncing to Firestore (future); local MVP uses AsyncStorage without login
 - No `allow read, write: if true`
 - No cross-user reads on `favorites` or `readingProgress`
 - Story content writes only via Admin SDK / Console (outside app)
 
 **MVP without Firestore:**
 
-- App uses mock catalog and local favorites/progress — Firestore rules do not apply at runtime
+- App uses mock catalog and local favorites/progress (AsyncStorage) — Firestore rules do not apply at runtime
+- Reading, favorites, and progress work with no Firebase configuration
 
 ---
 
@@ -902,7 +906,8 @@ stories/
 **MVP:**
 
 - **No test/staging environment** — reduces config drift and cost
-- **App must work without `.env`** — mock story catalog, local favorites, local progress
+- **App must work without `.env`** — mock story catalog; favorites and reading progress on device via AsyncStorage
+- **App must work without login** — auth is optional (Profile only); no Firebase env required to read
 - Firebase config per environment in env files (e.g. `.env.development`, `.env.production`) — not committed with secrets
 - Use `app.config.js` / Expo `extra` to inject public Firebase keys at build time when present
 - Missing `EXPO_PUBLIC_FIREBASE_*` vars must **not** crash the app or block Splash → Home
@@ -1019,7 +1024,8 @@ page-003.webp
 | Runtime | Expo |
 | UI framework | React Native |
 | Auth | Firebase Auth (optional — Profile only) |
-| Data (MVP) | Mock stories + local favorites/progress |
+| Data (MVP) | Mock stories + local favorites/progress (AsyncStorage) |
+| Cloud sync | **Future** — Firestore per-account (not MVP) |
 | Database (future) | Firestore |
 | Files (future) | Firebase Storage |
 | Backend | **No backend server** |
