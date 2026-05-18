@@ -1,18 +1,64 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { AppButton, AppCard, AppScreen, AppText } from '../../components/ui';
+import {
+  AppCard,
+  AppChip,
+  AppEmptyState,
+  AppIconButton,
+  AppScreen,
+  AppText,
+} from '../../components/ui';
 import { getStories } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
+import type { Story, StoryAgeGroup, StoryCategory } from '../../types/story';
 import { useAppTheme, type AppTheme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
+type AgeFilter = 'all' | StoryAgeGroup;
+
+const AGE_FILTERS: { id: AgeFilter; label: string }[] = [
+  { id: 'all', label: 'Усі' },
+  { id: '4+', label: '4+' },
+  { id: '5+', label: '5+' },
+  { id: '6+', label: '6+' },
+];
+
+const STORY_CATEGORY_LABELS: Record<StoryCategory, string> = {
+  folk: 'Народні',
+  fairy: 'Казки',
+  bedtime: 'На ніч',
+  animals: 'Тварини',
+  nature: 'Природа',
+};
+
 export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const stories = getStories();
+  const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
+
+  const activeStories = useMemo(() => getStories(), []);
+
+  const visibleStories = useMemo(() => {
+    if (ageFilter === 'all') {
+      return activeStories;
+    }
+
+    return activeStories.filter((story) => story.ageGroup === ageFilter);
+  }, [activeStories, ageFilter]);
+
+  if (activeStories.length === 0) {
+    return (
+      <AppScreen>
+        <AppEmptyState
+          title="Поки немає казок"
+          message="Незабаром з’являться нові історії."
+        />
+      </AppScreen>
+    );
+  }
 
   return (
     <AppScreen padded={false}>
@@ -20,58 +66,92 @@ export function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <AppText variant="h1">Читайко</AppText>
-          <AppText variant="body" color="secondary">
-            Казки для дітей
-          </AppText>
-        </View>
-
-        <View style={styles.catalog}>
-          {stories.map((story) => (
-            <AppCard
-              key={story.id}
-              onPress={() =>
-                navigation.navigate('StoryDetails', { storyId: story.id })
-              }
-            >
-              <AppText variant="h3">{story.title}</AppText>
-              <AppText variant="caption" color="muted" style={styles.cardMeta}>
-                {story.ageGroup} · {story.pageCount} стор.
-              </AppText>
-              <AppText
-                variant="body"
-                color="secondary"
-                numberOfLines={2}
-                style={styles.cardDescription}
-              >
-                {story.description}
-              </AppText>
-            </AppCard>
-          ))}
-        </View>
-
-        <View style={styles.navSection}>
-          <AppText variant="caption" color="muted">
-            Навігація (тест)
-          </AppText>
-          <View style={styles.navRow}>
-            <AppButton
-              label="Профіль"
-              variant="secondary"
-              onPress={() => navigation.navigate('Profile')}
-              style={styles.navButton}
-            />
-            <AppButton
-              label="Обране"
-              variant="secondary"
+        <View style={styles.topBar}>
+          <View style={styles.header}>
+            <AppText variant="h1">Читайко</AppText>
+            <AppText variant="body" color="secondary">
+              Казки для спокійного читання
+            </AppText>
+          </View>
+          <View style={styles.headerActions}>
+            <AppIconButton
+              accessibilityLabel="Обране"
+              label="♥"
               onPress={() => navigation.navigate('Favorites')}
-              style={styles.navButton}
+            />
+            <AppIconButton
+              accessibilityLabel="Профіль"
+              label="П"
+              onPress={() => navigation.navigate('Profile')}
             />
           </View>
         </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}
+        >
+          {AGE_FILTERS.map((chip) => (
+            <AppChip
+              key={chip.id}
+              label={chip.label}
+              selected={ageFilter === chip.id}
+              onPress={() => setAgeFilter(chip.id)}
+            />
+          ))}
+        </ScrollView>
+
+        {visibleStories.length === 0 ? (
+          <AppEmptyState
+            title="Немає казок"
+            message="Спробуйте обрати інший вік."
+            actionLabel="Усі казки"
+            onAction={() => setAgeFilter('all')}
+          />
+        ) : (
+          <View style={styles.catalog}>
+            {visibleStories.map((story) => (
+              <StoryCatalogCard
+                key={story.id}
+                story={story}
+                styles={styles}
+                onPress={() =>
+                  navigation.navigate('StoryDetails', { storyId: story.id })
+                }
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </AppScreen>
+  );
+}
+
+type StoryCatalogCardProps = {
+  story: Story;
+  styles: ReturnType<typeof createStyles>;
+  onPress: () => void;
+};
+
+function StoryCatalogCard({ story, styles, onPress }: StoryCatalogCardProps) {
+  const categoryLabel = STORY_CATEGORY_LABELS[story.category];
+
+  return (
+    <AppCard onPress={onPress}>
+      <AppText variant="h3">{story.title}</AppText>
+      <AppText
+        variant="body"
+        color="secondary"
+        numberOfLines={2}
+        style={styles.cardDescription}
+      >
+        {story.description}
+      </AppText>
+      <AppText variant="caption" color="muted" style={styles.cardMeta}>
+        {story.ageGroup} · {categoryLabel} · {story.pageCount} стор.
+      </AppText>
+    </AppCard>
   );
 }
 
@@ -83,27 +163,32 @@ function createStyles(theme: AppTheme) {
       paddingBottom: theme.spacing.space_16,
       gap: theme.layout.sectionGap,
     },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: theme.spacing.space_3,
+    },
     header: {
+      flex: 1,
       gap: theme.spacing.space_2,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: theme.spacing.space_1,
+    },
+    chipRow: {
+      gap: theme.spacing.space_2,
+      paddingRight: theme.layout.screenPadding,
     },
     catalog: {
       gap: theme.layout.cardGap,
     },
-    cardMeta: {
-      marginTop: theme.spacing.space_2,
-    },
     cardDescription: {
       marginTop: theme.spacing.space_3,
     },
-    navSection: {
-      gap: theme.spacing.space_3,
-    },
-    navRow: {
-      flexDirection: 'row',
-      gap: theme.spacing.space_3,
-    },
-    navButton: {
-      flex: 1,
+    cardMeta: {
+      marginTop: theme.spacing.space_3,
     },
   });
 }
