@@ -3,17 +3,42 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { AppButton, AppEmptyState, AppScreen, AppText } from '../../components/ui';
+import {
+  AppButton,
+  AppCard,
+  AppErrorState,
+  AppScreen,
+  AppText,
+} from '../../components/ui';
 import {
   addFavorite,
   isFavorite,
   removeFavorite,
 } from '../../features/favorites';
+import { getProgress } from '../../features/reader';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
+import type { ReadingProgress } from '../../types/readingProgress';
+import type { StoryCategory } from '../../types/story';
 import { useAppTheme, type AppTheme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StoryDetails'>;
+
+const STORY_CATEGORY_LABELS: Record<StoryCategory, string> = {
+  folk: 'Народні',
+  fairy: 'Казки',
+  bedtime: 'На ніч',
+  animals: 'Тварини',
+  nature: 'Природа',
+};
+
+function getReadButtonLabel(progress: ReadingProgress | null): string {
+  if (progress && !progress.completed) {
+    return 'Продовжити читання';
+  }
+
+  return 'Читати';
+}
 
 export function StoryDetailsScreen({ navigation, route }: Props) {
   const { storyId } = route.params;
@@ -21,15 +46,19 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const story = getStoryById(storyId);
   const [isStoryFavorite, setIsStoryFavorite] = useState(false);
+  const [progress, setProgress] = useState<ReadingProgress | null>(null);
 
-  const refreshFavorite = useCallback(() => {
+  const refreshScreenState = useCallback(() => {
     setIsStoryFavorite(isFavorite(storyId));
+
+    const progressResult = getProgress(storyId);
+    setProgress(progressResult.success ? progressResult.data : null);
   }, [storyId]);
 
   useFocusEffect(
     useCallback(() => {
-      refreshFavorite();
-    }, [refreshFavorite]),
+      refreshScreenState();
+    }, [refreshScreenState]),
   );
 
   const handleToggleFavorite = () => {
@@ -39,21 +68,34 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
       addFavorite(storyId);
     }
 
-    refreshFavorite();
+    refreshScreenState();
+  };
+
+  const handleRead = () => {
+    if (!story) {
+      return;
+    }
+
+    navigation.navigate('Reader', { storyId: story.id });
   };
 
   if (!story) {
     return (
-      <AppScreen>
-        <AppEmptyState
+      <AppScreen centered>
+        <AppErrorState
           title="Казку не знайдено"
-          message="Спробуйте повернутися до каталогу."
-          actionLabel="Назад"
-          onAction={() => navigation.goBack()}
+          message="Можливо, її більше немає в каталозі."
+          actionLabel="До каталогу"
+          onRetry={() => navigation.navigate('Home')}
         />
       </AppScreen>
     );
   }
+
+  const categoryLabel = STORY_CATEGORY_LABELS[story.category];
+  const hasProgress = progress !== null;
+  const isCompleted = progress?.completed === true;
+  const readButtonLabel = getReadButtonLabel(progress);
 
   return (
     <AppScreen padded={false}>
@@ -61,33 +103,59 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <AppText variant="h1">{story.title}</AppText>
-        <AppText variant="bodyLarge" color="secondary" style={styles.description}>
-          {story.description}
-        </AppText>
-        <View style={styles.meta}>
+        <AppCard style={styles.coverCard}>
           <AppText variant="caption" color="muted">
-            Вік: {story.ageGroup}
+            Обкладинка
           </AppText>
-          <AppText variant="caption" color="muted">
-            Категорія: {story.category}
+        </AppCard>
+
+        <View style={styles.content}>
+          <AppText variant="h1">{story.title}</AppText>
+
+          <View style={styles.meta}>
+            <AppText variant="caption" color="muted">
+              Вік {story.ageGroup}
+            </AppText>
+            <AppText variant="caption" color="muted">
+              {categoryLabel}
+            </AppText>
+            <AppText variant="caption" color="muted">
+              {story.pageCount} сторінок
+            </AppText>
+          </View>
+
+          {isStoryFavorite ? (
+            <AppText variant="caption" color="primary" style={styles.favoriteNote}>
+              В обраному
+            </AppText>
+          ) : null}
+
+          {hasProgress && !isCompleted ? (
+            <AppText variant="body" color="secondary" style={styles.progressNote}>
+              Сторінка {progress.lastPage} з {story.pageCount}
+            </AppText>
+          ) : null}
+
+          {isCompleted ? (
+            <AppText variant="body" color="secondary" style={styles.completedNote}>
+              Казку прочитано
+            </AppText>
+          ) : null}
+
+          <AppText variant="bodyLarge" color="secondary" style={styles.description}>
+            {story.description}
           </AppText>
-          <AppText variant="caption" color="muted">
-            Сторінок: {story.pageCount}
-          </AppText>
-        </View>
-        <View style={styles.actions}>
-          <AppButton
-            label="Читати"
-            onPress={() => navigation.navigate('Reader', { storyId: story.id })}
-          />
-          <AppButton
-            label={
-              isStoryFavorite ? 'Прибрати з обраного' : 'Додати в обране'
-            }
-            variant="secondary"
-            onPress={handleToggleFavorite}
-          />
+
+          <View style={styles.actions}>
+            <AppButton label={readButtonLabel} onPress={handleRead} />
+            <AppButton
+              label={
+                isStoryFavorite ? 'Прибрати з обраного' : 'Додати в обране'
+              }
+              variant="secondary"
+              onPress={handleToggleFavorite}
+            />
+          </View>
         </View>
       </ScrollView>
     </AppScreen>
@@ -97,19 +165,41 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
 function createStyles(theme: AppTheme) {
   return StyleSheet.create({
     scroll: {
-      paddingHorizontal: theme.layout.screenPadding,
-      paddingTop: theme.spacing.space_4,
       paddingBottom: theme.spacing.space_16,
     },
-    description: {
+    coverCard: {
+      minHeight: 200,
+      marginHorizontal: theme.layout.screenPadding,
       marginTop: theme.spacing.space_4,
+      backgroundColor: theme.colors.surfaceMuted,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    content: {
+      paddingHorizontal: theme.layout.screenPadding,
+      paddingTop: theme.spacing.space_6,
+      gap: theme.spacing.space_3,
     },
     meta: {
-      marginTop: theme.spacing.space_6,
-      gap: theme.spacing.space_2,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.space_3,
+      marginTop: theme.spacing.space_2,
+    },
+    favoriteNote: {
+      marginTop: theme.spacing.space_1,
+    },
+    progressNote: {
+      marginTop: theme.spacing.space_1,
+    },
+    completedNote: {
+      marginTop: theme.spacing.space_1,
+    },
+    description: {
+      marginTop: theme.spacing.space_3,
     },
     actions: {
-      marginTop: theme.spacing.space_8,
+      marginTop: theme.spacing.space_6,
       gap: theme.spacing.space_3,
     },
   });
