@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -9,6 +9,11 @@ import {
   AppScreen,
   AppText,
 } from '../../components/ui';
+import {
+  getProgress,
+  markCompleted,
+  saveProgress,
+} from '../../features/reader';
 import { getMockStoryById, getMockStoryPages } from '../../features/stories';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAppTheme, type AppTheme } from '../../theme';
@@ -23,6 +28,16 @@ export function ReaderScreen({ navigation, route }: Props) {
   const story = getMockStoryById(storyId);
   const pages = getMockStoryPages(storyId);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  useEffect(() => {
+    const result = getProgress(storyId);
+
+    if (result.success && result.data) {
+      setCurrentPage(result.data.lastPage);
+      setIsCompleted(result.data.completed);
+    }
+  }, [storyId]);
 
   if (!story || pages.length === 0) {
     return (
@@ -41,6 +56,18 @@ export function ReaderScreen({ navigation, route }: Props) {
   const isFirstPage = page.pageNumber <= 1;
   const isLastPage = page.pageNumber >= pages.length;
 
+  const goToPage = (nextPage: number) => {
+    setCurrentPage(nextPage);
+    saveProgress(storyId, nextPage);
+
+    if (nextPage >= pages.length) {
+      const completedResult = markCompleted(storyId);
+      if (completedResult.success) {
+        setIsCompleted(true);
+      }
+    }
+  };
+
   return (
     <AppScreen>
       <View style={styles.container}>
@@ -48,6 +75,11 @@ export function ReaderScreen({ navigation, route }: Props) {
           <AppText variant="reader" style={styles.pageText}>
             {page.text}
           </AppText>
+          {isCompleted ? (
+            <AppText variant="body" color="secondary" style={styles.completed}>
+              Казку прочитано
+            </AppText>
+          ) : null}
         </View>
 
         <View style={styles.footer}>
@@ -61,20 +93,22 @@ export function ReaderScreen({ navigation, route }: Props) {
               label="Назад"
               variant="secondary"
               disabled={isFirstPage}
-              onPress={() =>
-                setCurrentPage((value) => Math.max(1, value - 1))
-              }
+              onPress={() => goToPage(Math.max(1, currentPage - 1))}
               style={styles.controlButton}
             />
             <AppButton
               label="Далі"
               variant="secondary"
-              disabled={isLastPage}
-              onPress={() =>
-                setCurrentPage((value) =>
-                  Math.min(pages.length, value + 1),
-                )
-              }
+              disabled={isLastPage && isCompleted}
+              onPress={() => {
+                if (isLastPage) {
+                  markCompleted(storyId);
+                  setIsCompleted(true);
+                  return;
+                }
+
+                goToPage(Math.min(pages.length, currentPage + 1));
+              }}
               style={styles.controlButton}
             />
           </View>
@@ -97,6 +131,10 @@ function createStyles(theme: AppTheme) {
     },
     pageText: {
       color: theme.colors.textPrimary,
+    },
+    completed: {
+      marginTop: theme.spacing.space_6,
+      textAlign: 'center',
     },
     footer: {
       gap: theme.spacing.space_6,

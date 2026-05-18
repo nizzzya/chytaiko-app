@@ -1,8 +1,14 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppButton, AppEmptyState, AppScreen, AppText } from '../../components/ui';
+import {
+  addFavorite,
+  isFavorite,
+  removeFavorite,
+} from '../../features/favorites';
 import { getMockStoryById } from '../../features/stories';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAppTheme, type AppTheme } from '../../theme';
@@ -14,6 +20,27 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const story = getMockStoryById(storyId);
+  const [isStoryFavorite, setIsStoryFavorite] = useState(false);
+
+  const refreshFavorite = useCallback(() => {
+    setIsStoryFavorite(isFavorite(storyId));
+  }, [storyId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshFavorite();
+    }, [refreshFavorite]),
+  );
+
+  const handleToggleFavorite = () => {
+    if (isStoryFavorite) {
+      removeFavorite(storyId);
+    } else {
+      addFavorite(storyId);
+    }
+
+    refreshFavorite();
+  };
 
   if (!story) {
     return (
@@ -49,11 +76,19 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
             Сторінок: {story.pageCount}
           </AppText>
         </View>
-        <AppButton
-          label="Читати"
-          onPress={() => navigation.navigate('Reader', { storyId: story.id })}
-          style={styles.readButton}
-        />
+        <View style={styles.actions}>
+          <AppButton
+            label="Читати"
+            onPress={() => navigation.navigate('Reader', { storyId: story.id })}
+          />
+          <AppButton
+            label={
+              isStoryFavorite ? 'Прибрати з обраного' : 'Додати в обране'
+            }
+            variant="secondary"
+            onPress={handleToggleFavorite}
+          />
+        </View>
       </ScrollView>
     </AppScreen>
   );
@@ -73,8 +108,9 @@ function createStyles(theme: AppTheme) {
       marginTop: theme.spacing.space_6,
       gap: theme.spacing.space_2,
     },
-    readButton: {
+    actions: {
       marginTop: theme.spacing.space_8,
+      gap: theme.spacing.space_3,
     },
   });
 }
