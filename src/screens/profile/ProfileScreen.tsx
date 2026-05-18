@@ -27,40 +27,56 @@ export function ProfileScreen({ navigation }: Props) {
 
     if (!result.success) {
       setErrorMessage(result.error.message);
-      return;
     }
-
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Onboarding' }],
-    });
   };
 
   return (
     <AppScreen>
       <View style={styles.content}>
         <AppText variant="h2">Профіль</AppText>
-        {user?.email ? (
-          <AppText variant="body" color="secondary" style={styles.email}>
-            {user.email}
-          </AppText>
-        ) : null}
-        <AppText variant="body" color="muted" style={styles.hint}>
-          Налаштування — незабаром
-        </AppText>
-        {errorMessage ? (
-          <AppText variant="caption" color="error" style={styles.error}>
-            {errorMessage}
-          </AppText>
-        ) : null}
-        <AppButton
-          label="Вийти"
-          variant="secondary"
-          onPress={handleLogout}
-          loading={loading}
-          disabled={loading}
-          style={styles.logout}
-        />
+
+        {user ? (
+          <>
+            {user.email ? (
+              <AppText variant="body" color="secondary" style={styles.email}>
+                {user.email}
+              </AppText>
+            ) : null}
+            <AppText variant="body" color="muted" style={styles.hint}>
+              Налаштування — незабаром
+            </AppText>
+            {errorMessage ? (
+              <AppText variant="caption" color="error" style={styles.error}>
+                {errorMessage}
+              </AppText>
+            ) : null}
+            <AppButton
+              label="Вийти"
+              variant="secondary"
+              onPress={handleLogout}
+              loading={loading}
+              disabled={loading}
+              style={styles.action}
+            />
+          </>
+        ) : (
+          <>
+            <AppText variant="body" color="secondary" style={styles.hint}>
+              Увійдіть, щоб зберегти обране та прогрес на всіх пристроях.
+            </AppText>
+            <AppButton
+              label="Увійти"
+              onPress={() => navigation.navigate('Login')}
+              style={styles.action}
+            />
+            <AppButton
+              label="Створити акаунт"
+              variant="secondary"
+              onPress={() => navigation.navigate('Register')}
+              style={styles.action}
+            />
+          </>
+        )}
       </View>
     </AppScreen>
   );
@@ -81,8 +97,8 @@ function createStyles(theme: AppTheme) {
     error: {
       marginTop: theme.spacing.space_4,
     },
-    logout: {
-      marginTop: theme.spacing.space_8,
+    action: {
+      marginTop: theme.spacing.space_6,
     },
   });
 }
