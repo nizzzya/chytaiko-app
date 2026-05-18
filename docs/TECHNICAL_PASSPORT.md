@@ -574,11 +574,17 @@ Document ID: auto-generated or explicit `id` (must match `id` field)
 | `category` | string | yes | Category slug or id |
 | `coverImage` | string | yes | Storage path or download URL |
 | `pageCount` | number | yes | Total pages; must match `storyPages` count |
-| `status` | string | yes | `draft` \| `published` — MVP catalog reads `published` only |
+| `status` | string | yes | `draft` \| `active` — MVP catalog reads `active` only; `draft` is hidden from users |
 | `createdAt` | timestamp | yes | |
 | `updatedAt` | timestamp | yes | |
 
-**Ownership:** Authenticated users read `published` stories only. No client writes in MVP.
+**Story status rules:**
+
+- `active` — visible in catalog and readable by authenticated users
+- `draft` — hidden from catalog; not shown to users in MVP
+- Do not use `published` (outdated; replaced by `active`)
+
+**Ownership:** Authenticated users read `active` stories only. No client writes in MVP.
 
 ---
 
@@ -636,7 +642,7 @@ Document ID: recommended `{userId}_{storyId}`
 | Collection | Client read | Client write |
 |------------|-------------|--------------|
 | `users` | Own doc only | Own doc only |
-| `stories` | Authenticated (`published`) | None (MVP) |
+| `stories` | Authenticated (`active` only) | None (MVP) |
 | `storyPages` | Authenticated | None (MVP) |
 | `favorites` | Own docs only | Own docs only |
 | `readingProgress` | Own docs only | Own docs only |
@@ -655,7 +661,7 @@ MVP security model. No public writes. No open collections.
 
 | Collection | Read | Write | Delete |
 |------------|------|-------|--------|
-| **Stories** | Authenticated; `status == 'published'` | Denied | Denied |
+| **Stories** | Authenticated; `status == 'active'` | Denied | Denied |
 | **Story pages** | Authenticated | Denied | Denied |
 | **Favorites** | Owner (`userId == auth.uid`) | Owner create/update | Owner |
 | **Reading progress** | Owner (`userId == auth.uid`) | Owner create/update | Owner |
@@ -681,7 +687,7 @@ UI states must map to `DESIGN_CODE.md` components (§27–§28, §32). No crash 
 
 ```
 loading → success
-loading → empty (no published stories)
+loading → empty (no active stories)
 loading → error → retry → loading
 ```
 
