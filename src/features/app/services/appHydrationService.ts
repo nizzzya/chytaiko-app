@@ -1,52 +1,100 @@
+import { initializeStoriesData } from '../../stories/services/storiesService';
 import { hydrateFavorites } from '../../favorites/services/mockFavoritesService';
 import { hydrateReadingProgress } from '../../reader/services/mockReadingProgressService';
 
 type HydrationListener = () => void;
 
-let hydrated = false;
+const STORIES_SOURCE_ENV = 'EXPO_PUBLIC_STORIES_SOURCE';
+
+let localDataHydrated = false;
+let storiesCatalogReady = false;
 let hydrationPromise: Promise<void> | null = null;
-const listeners = new Set<HydrationListener>();
 
-function notifyHydrated(): void {
-  hydrated = true;
+const localDataListeners = new Set<HydrationListener>();
+const storiesCatalogListeners = new Set<HydrationListener>();
 
-  for (const listener of listeners) {
+function usesFirestoreStoriesSource(): boolean {
+  return process.env[STORIES_SOURCE_ENV]?.trim().toLowerCase() === 'firestore';
+}
+
+function notifyLocalDataHydrated(): void {
+  localDataHydrated = true;
+
+  for (const listener of localDataListeners) {
     listener();
   }
 }
 
+function notifyStoriesCatalogReady(): void {
+  storiesCatalogReady = true;
+
+  for (const listener of storiesCatalogListeners) {
+    listener();
+  }
+}
+
+/** Favorites and reading progress AsyncStorage hydration (unchanged). */
 export function isHydrated(): boolean {
-  return hydrated;
+  return localDataHydrated;
 }
 
 export function subscribeHydration(listener: HydrationListener): () => void {
-  listeners.add(listener);
+  localDataListeners.add(listener);
 
-  if (hydrated) {
+  if (localDataHydrated) {
     listener();
   }
 
   return () => {
-    listeners.delete(listener);
+    localDataListeners.delete(listener);
+  };
+}
+
+/** Stories catalog data source initialization (mock or Firestore). */
+export function isStoriesCatalogReady(): boolean {
+  if (!usesFirestoreStoriesSource()) {
+    return true;
+  }
+
+  return storiesCatalogReady;
+}
+
+export function subscribeStoriesCatalogReady(
+  listener: HydrationListener,
+): () => void {
+  storiesCatalogListeners.add(listener);
+
+  if (isStoriesCatalogReady()) {
+    listener();
+  }
+
+  return () => {
+    storiesCatalogListeners.delete(listener);
   };
 }
 
 export function initializeAppHydration(): Promise<void> {
-  if (hydrated) {
+  if (localDataHydrated && isStoriesCatalogReady()) {
     return Promise.resolve();
   }
 
   if (!hydrationPromise) {
     hydrationPromise = Promise.all([
-      hydrateFavorites(),
-      hydrateReadingProgress(),
-    ])
-      .then(() => {
-        notifyHydrated();
-      })
-      .catch(() => {
-        notifyHydrated();
-      });
+      Promise.all([hydrateFavorites(), hydrateReadingProgress()])
+        .then(() => {
+          notifyLocalDataHydrated();
+        })
+        .catch(() => {
+          notifyLocalDataHydrated();
+        }),
+      initializeStoriesData()
+        .then(() => {
+          notifyStoriesCatalogReady();
+        })
+        .catch(() => {
+          notifyStoriesCatalogReady();
+        }),
+    ]).then(() => undefined);
   }
 
   return hydrationPromise;
