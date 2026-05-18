@@ -1,5 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
+import { resolveStorageImageUrl } from './storyStorageImageService';
+
 export type StoryImageSourceType = 'local' | 'remote' | 'missing';
 
 export type StoryImageSource = {
@@ -30,6 +32,21 @@ function isRemoteImagePath(imagePath: string): boolean {
   return /^https?:\/\//i.test(imagePath);
 }
 
+/** Firebase Storage object path (§20): stories/{slug}/cover.webp, page-001.webp, … */
+function isFirebaseStoragePath(imagePath: string): boolean {
+  const normalized = imagePath.trim().replace(/^\/+/, '');
+
+  if (!normalized || normalized.includes('..')) {
+    return false;
+  }
+
+  return /^stories\/[^/]+\/.+/i.test(normalized);
+}
+
+/**
+ * Sync resolver for bundled local assets and direct http(s) URLs.
+ * Storage paths (stories/…) resolve as missing until screens adopt async resolver.
+ */
 export function resolveStoryImageSource(
   imagePath: string | null | undefined,
 ): StoryImageSource {
@@ -47,6 +64,41 @@ export function resolveStoryImageSource(
 
   if (localSource) {
     return { type: 'local', source: localSource };
+  }
+
+  return { type: 'missing', source: null };
+}
+
+/**
+ * Async resolver: local registry → http(s) → Firebase Storage download URL → missing.
+ */
+export async function resolveStoryImageSourceAsync(
+  imagePath: string | null | undefined,
+): Promise<StoryImageSource> {
+  if (!imagePath?.trim()) {
+    return { type: 'missing', source: null };
+  }
+
+  const normalizedPath = imagePath.trim();
+
+  const localSource = STORY_ASSET_SOURCES[normalizedPath];
+
+  if (localSource) {
+    return { type: 'local', source: localSource };
+  }
+
+  if (isRemoteImagePath(normalizedPath)) {
+    return { type: 'remote', source: { uri: normalizedPath } };
+  }
+
+  if (isFirebaseStoragePath(normalizedPath)) {
+    const storageResult = await resolveStorageImageUrl(normalizedPath);
+
+    if (storageResult.success) {
+      return { type: 'remote', source: { uri: storageResult.url } };
+    }
+
+    return { type: 'missing', source: null };
   }
 
   return { type: 'missing', source: null };
