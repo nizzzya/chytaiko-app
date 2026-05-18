@@ -14,7 +14,10 @@ import {
   markCompleted,
   saveProgress,
 } from '../../features/reader';
-import { getMockStoryById, getMockStoryPages } from '../../features/stories';
+import {
+  getStoryById,
+  getStoryPages,
+} from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAppTheme, type AppTheme } from '../../theme';
 
@@ -25,8 +28,8 @@ export function ReaderScreen({ navigation, route }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const story = getMockStoryById(storyId);
-  const pages = getMockStoryPages(storyId);
+  const story = getStoryById(storyId);
+  const pages = getStoryPages(storyId);
   const [currentPage, setCurrentPage] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
 

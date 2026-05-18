@@ -1,5 +1,5 @@
 export {
-  getMockStories,
-  getMockStoryById,
-  getMockStoryPages,
-} from './services/storyMockService';
+  getStories,
+  getStoryById,
+  getStoryPages,
+} from './services/storiesService';

@@ -5,7 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppCard, AppEmptyState, AppScreen, AppText } from '../../components/ui';
 import { getFavorites } from '../../features/favorites';
-import { getMockStoryById } from '../../features/stories';
+import { getStoryById } from '../../features/stories/services/storiesService';
 import type { Story } from '../../types/story';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAppTheme, type AppTheme } from '../../theme';
@@ -26,7 +26,7 @@ export function FavoritesScreen({ navigation }: Props) {
     }
 
     const favoriteStories = result.data
-      .map((favorite) => getMockStoryById(favorite.storyId))
+      .map((favorite) => getStoryById(favorite.storyId))
       .filter((story): story is Story => story !== undefined);
 
     setStories(favoriteStories);

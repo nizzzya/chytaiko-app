@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppButton, AppCard, AppScreen, AppText } from '../../components/ui';
-import { getMockStories } from '../../features/stories';
+import { getStories } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAppTheme, type AppTheme } from '../../theme';
 
@@ -12,7 +12,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const stories = getMockStories();
+  const stories = getStories();
 
   return (
     <AppScreen padded={false}>

@@ -9,7 +9,7 @@ import {
   isFavorite,
   removeFavorite,
 } from '../../features/favorites';
-import { getMockStoryById } from '../../features/stories';
+import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import { useAppTheme, type AppTheme } from '../../theme';
 
@@ -19,7 +19,7 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const { storyId } = route.params;
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const story = getMockStoryById(storyId);
+  const story = getStoryById(storyId);
   const [isStoryFavorite, setIsStoryFavorite] = useState(false);
 
   const refreshFavorite = useCallback(() => {
