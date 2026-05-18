@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -7,9 +7,14 @@ import {
   AppButton,
   AppCard,
   AppEmptyState,
+  AppLoadingState,
   AppScreen,
   AppText,
 } from '../../components/ui';
+import {
+  isHydrated,
+  subscribeHydration,
+} from '../../features/app/services/appHydrationService';
 import { getFavorites, removeFavorite } from '../../features/favorites';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
@@ -30,6 +35,9 @@ export function FavoritesScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [hydrationReady, setHydrationReady] = useState(isHydrated());
+
+  useEffect(() => subscribeHydration(() => setHydrationReady(true)), []);
 
   const loadFavorites = useCallback(() => {
     const result = getFavorites();
@@ -46,16 +54,36 @@ export function FavoritesScreen({ navigation }: Props) {
     setStories(favoriteStories);
   }, []);
 
+  useEffect(() => {
+    if (!hydrationReady) {
+      return;
+    }
+
+    loadFavorites();
+  }, [hydrationReady, loadFavorites]);
+
   useFocusEffect(
     useCallback(() => {
+      if (!hydrationReady) {
+        return;
+      }
+
       loadFavorites();
-    }, [loadFavorites]),
+    }, [hydrationReady, loadFavorites]),
   );
 
   const handleRemove = (storyId: string) => {
     removeFavorite(storyId);
     loadFavorites();
   };
+
+  if (!hydrationReady) {
+    return (
+      <AppScreen>
+        <AppLoadingState variant="bar" />
+      </AppScreen>
+    );
+  }
 
   if (stories.length === 0) {
     return (

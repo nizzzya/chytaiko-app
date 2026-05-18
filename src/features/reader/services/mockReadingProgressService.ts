@@ -39,7 +39,7 @@ function isReadingProgressRecord(value: unknown): value is ReadingProgress {
   );
 }
 
-async function hydrateProgress(): Promise<void> {
+export async function hydrateReadingProgress(): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
 
@@ -75,8 +75,6 @@ async function persistProgress(): Promise<void> {
     // Memory remains source of truth for the current session.
   }
 }
-
-void hydrateProgress();
 
 export function getProgress(
   storyId: string,

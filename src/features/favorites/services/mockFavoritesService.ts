@@ -43,7 +43,7 @@ function sortFavorites(favorites: Favorite[]): Favorite[] {
   );
 }
 
-async function hydrateFavorites(): Promise<void> {
+export async function hydrateFavorites(): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
 
@@ -79,8 +79,6 @@ async function persistFavorites(): Promise<void> {
     // Memory remains source of truth for the current session.
   }
 }
-
-void hydrateFavorites();
 
 export function getFavorites(): FavoritesResult<Favorite[]> {
   const favorites = Array.from(favoritesByStoryId.values()).filter(

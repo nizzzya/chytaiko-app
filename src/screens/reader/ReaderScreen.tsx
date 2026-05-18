@@ -5,10 +5,15 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
   AppButton,
   AppErrorState,
+  AppLoadingState,
   AppProgress,
   AppScreen,
   AppText,
 } from '../../components/ui';
+import {
+  isHydrated,
+  subscribeHydration,
+} from '../../features/app/services/appHydrationService';
 import {
   getProgress,
   markCompleted,
@@ -31,8 +36,12 @@ export function ReaderScreen({ navigation, route }: Props) {
 
   const story = getStoryById(storyId);
   const pages = getStoryPages(storyId);
+  const [hydrationReady, setHydrationReady] = useState(isHydrated());
+  const [progressInitialized, setProgressInitialized] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
+
+  useEffect(() => subscribeHydration(() => setHydrationReady(true)), []);
 
   const restoreProgress = useCallback(() => {
     const result = getProgress(storyId);
@@ -53,8 +62,13 @@ export function ReaderScreen({ navigation, route }: Props) {
   }, [storyId, pages.length]);
 
   useEffect(() => {
+    if (!hydrationReady || progressInitialized) {
+      return;
+    }
+
     restoreProgress();
-  }, [restoreProgress]);
+    setProgressInitialized(true);
+  }, [hydrationReady, progressInitialized, restoreProgress]);
 
   const goToStoryDetails = () => {
     navigation.navigate('StoryDetails', { storyId });
@@ -82,6 +96,14 @@ export function ReaderScreen({ navigation, route }: Props) {
           actionLabel="До казки"
           onRetry={goToStoryDetails}
         />
+      </AppScreen>
+    );
+  }
+
+  if (!hydrationReady || !progressInitialized) {
+    return (
+      <AppScreen>
+        <AppLoadingState variant="bar" />
       </AppScreen>
     );
   }

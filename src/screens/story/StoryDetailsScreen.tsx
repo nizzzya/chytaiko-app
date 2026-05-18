@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -7,9 +7,14 @@ import {
   AppButton,
   AppCard,
   AppErrorState,
+  AppLoadingState,
   AppScreen,
   AppText,
 } from '../../components/ui';
+import {
+  isHydrated,
+  subscribeHydration,
+} from '../../features/app/services/appHydrationService';
 import {
   addFavorite,
   isFavorite,
@@ -47,6 +52,9 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
   const story = getStoryById(storyId);
   const [isStoryFavorite, setIsStoryFavorite] = useState(false);
   const [progress, setProgress] = useState<ReadingProgress | null>(null);
+  const [hydrationReady, setHydrationReady] = useState(isHydrated());
+
+  useEffect(() => subscribeHydration(() => setHydrationReady(true)), []);
 
   const refreshScreenState = useCallback(() => {
     setIsStoryFavorite(isFavorite(storyId));
@@ -55,10 +63,22 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
     setProgress(progressResult.success ? progressResult.data : null);
   }, [storyId]);
 
+  useEffect(() => {
+    if (!hydrationReady) {
+      return;
+    }
+
+    refreshScreenState();
+  }, [hydrationReady, refreshScreenState]);
+
   useFocusEffect(
     useCallback(() => {
+      if (!hydrationReady) {
+        return;
+      }
+
       refreshScreenState();
-    }, [refreshScreenState]),
+    }, [hydrationReady, refreshScreenState]),
   );
 
   const handleToggleFavorite = () => {
@@ -88,6 +108,14 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
           actionLabel="До каталогу"
           onRetry={() => navigation.navigate('Home')}
         />
+      </AppScreen>
+    );
+  }
+
+  if (!hydrationReady) {
+    return (
+      <AppScreen>
+        <AppLoadingState variant="bar" />
       </AppScreen>
     );
   }
