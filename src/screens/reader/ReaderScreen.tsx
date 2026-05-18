@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   AppButton,
-  AppEmptyState,
+  AppErrorState,
   AppProgress,
   AppScreen,
   AppText,
@@ -19,6 +19,7 @@ import {
   getStoryPages,
 } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
+import type { StoryPage } from '../../types/story';
 import { useAppTheme, type AppTheme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Reader'>;
@@ -33,89 +34,235 @@ export function ReaderScreen({ navigation, route }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  useEffect(() => {
+  const restoreProgress = useCallback(() => {
     const result = getProgress(storyId);
 
-    if (result.success && result.data) {
-      setCurrentPage(result.data.lastPage);
-      setIsCompleted(result.data.completed);
+    if (!result.success || !result.data) {
+      setCurrentPage(1);
+      setIsCompleted(false);
+      return;
     }
-  }, [storyId]);
 
-  if (!story || pages.length === 0) {
+    const lastPage = Math.min(
+      Math.max(result.data.lastPage, 1),
+      Math.max(pages.length, 1),
+    );
+
+    setCurrentPage(lastPage);
+    setIsCompleted(result.data.completed);
+  }, [storyId, pages.length]);
+
+  useEffect(() => {
+    restoreProgress();
+  }, [restoreProgress]);
+
+  const goToStoryDetails = () => {
+    navigation.navigate('StoryDetails', { storyId });
+  };
+
+  if (!story) {
     return (
-      <AppScreen>
-        <AppEmptyState
-          title="Немає сторінок"
-          message="Ця казка ще не готова до читання."
-          actionLabel="Назад"
-          onAction={() => navigation.goBack()}
+      <AppScreen centered>
+        <AppErrorState
+          title="Казку не знайдено"
+          message="Не вдалося відкрити цю казку для читання."
+          actionLabel="До казки"
+          onRetry={goToStoryDetails}
         />
       </AppScreen>
     );
   }
 
-  const page = pages.find((item) => item.pageNumber === currentPage) ?? pages[0];
-  const isFirstPage = page.pageNumber <= 1;
-  const isLastPage = page.pageNumber >= pages.length;
+  if (pages.length === 0) {
+    return (
+      <AppScreen centered>
+        <AppErrorState
+          title="Немає сторінок"
+          message="Ця казка ще не готова до читання."
+          actionLabel="До казки"
+          onRetry={goToStoryDetails}
+        />
+      </AppScreen>
+    );
+  }
+
+  if (isCompleted) {
+    return (
+      <ReaderCompletedView
+        storyTitle={story.title}
+        styles={styles}
+        onBackToStory={goToStoryDetails}
+      />
+    );
+  }
+
+  return (
+    <ReaderContent
+      storyTitle={story.title}
+      storyId={storyId}
+      pages={pages}
+      currentPage={currentPage}
+      styles={styles}
+      onPageChange={setCurrentPage}
+      onComplete={() => {
+        saveProgress(storyId, pages.length);
+        markCompleted(storyId);
+        setIsCompleted(true);
+      }}
+      onBackToStory={goToStoryDetails}
+    />
+  );
+}
+
+type ReaderContentProps = {
+  storyTitle: string;
+  storyId: string;
+  pages: StoryPage[];
+  currentPage: number;
+  styles: ReturnType<typeof createStyles>;
+  onPageChange: (page: number) => void;
+  onComplete: () => void;
+  onBackToStory: () => void;
+};
+
+function ReaderContent({
+  storyTitle,
+  storyId,
+  pages,
+  currentPage,
+  styles,
+  onPageChange,
+  onComplete,
+  onBackToStory,
+}: ReaderContentProps) {
+  const page =
+    pages.find((item) => item.pageNumber === currentPage) ?? pages[0];
+  const pageIndex = page.pageNumber;
+  const isFirstPage = pageIndex <= 1;
+  const isLastPage = pageIndex >= pages.length;
 
   const goToPage = (nextPage: number) => {
-    setCurrentPage(nextPage);
-    saveProgress(storyId, nextPage);
+    const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
+    onPageChange(clampedPage);
+    saveProgress(storyId, clampedPage);
+  };
 
-    if (nextPage >= pages.length) {
-      const completedResult = markCompleted(storyId);
-      if (completedResult.success) {
-        setIsCompleted(true);
-      }
+  const handlePrevious = () => {
+    if (isFirstPage) {
+      return;
     }
+
+    goToPage(pageIndex - 1);
+  };
+
+  const handleNext = () => {
+    if (isLastPage) {
+      onComplete();
+      return;
+    }
+
+    goToPage(pageIndex + 1);
   };
 
   return (
-    <AppScreen>
+    <AppScreen padded={false} style={styles.screen}>
       <View style={styles.container}>
-        <View style={styles.textArea}>
+        <AppText
+          variant="caption"
+          color="secondary"
+          numberOfLines={1}
+          style={styles.storyTitle}
+        >
+          {storyTitle}
+        </AppText>
+
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.imageArea}>
+            <AppText variant="caption" color="muted">
+              Ілюстрація
+            </AppText>
+          </View>
+
           <AppText variant="reader" style={styles.pageText}>
             {page.text}
           </AppText>
-          {isCompleted ? (
-            <AppText variant="body" color="secondary" style={styles.completed}>
-              Казку прочитано
-            </AppText>
-          ) : null}
-        </View>
+        </ScrollView>
 
         <View style={styles.footer}>
-          <AppProgress
-            variant="dots"
-            total={pages.length}
-            current={page.pageNumber}
-          />
-          <View style={styles.controls}>
+          <View style={styles.progressBlock}>
+            <AppProgress
+              variant="dots"
+              total={pages.length}
+              current={pageIndex}
+            />
+            <AppText variant="caption" color="muted" style={styles.progressText}>
+              Сторінка {pageIndex} з {pages.length}
+            </AppText>
+          </View>
+
+          <View style={styles.controlsRow}>
             <AppButton
               label="Назад"
               variant="secondary"
               disabled={isFirstPage}
-              onPress={() => goToPage(Math.max(1, currentPage - 1))}
+              onPress={handlePrevious}
               style={styles.controlButton}
             />
             <AppButton
-              label="Далі"
-              variant="secondary"
-              disabled={isLastPage && isCompleted}
-              onPress={() => {
-                if (isLastPage) {
-                  markCompleted(storyId);
-                  setIsCompleted(true);
-                  return;
-                }
-
-                goToPage(Math.min(pages.length, currentPage + 1));
-              }}
+              label={isLastPage ? 'Завершити' : 'Далі'}
+              variant={isLastPage ? 'primary' : 'secondary'}
+              onPress={handleNext}
               style={styles.controlButton}
             />
           </View>
+
+          <AppButton
+            label="До казки"
+            variant="secondary"
+            onPress={onBackToStory}
+          />
         </View>
+      </View>
+    </AppScreen>
+  );
+}
+
+type ReaderCompletedViewProps = {
+  storyTitle: string;
+  styles: ReturnType<typeof createStyles>;
+  onBackToStory: () => void;
+};
+
+function ReaderCompletedView({
+  storyTitle,
+  styles,
+  onBackToStory,
+}: ReaderCompletedViewProps) {
+  return (
+    <AppScreen padded={false} style={styles.screen}>
+      <View style={styles.completedContainer}>
+        <AppText
+          variant="caption"
+          color="secondary"
+          numberOfLines={1}
+          style={styles.storyTitle}
+        >
+          {storyTitle}
+        </AppText>
+
+        <View style={styles.completedBody}>
+          <AppText variant="h3" style={styles.completedTitle}>
+            Казку прочитано
+          </AppText>
+          <AppText variant="body" color="secondary" style={styles.completedMessage}>
+            Дякуємо за спокійне читання разом.
+          </AppText>
+        </View>
+
+        <AppButton label="До казки" onPress={onBackToStory} />
       </View>
     </AppScreen>
   );
@@ -123,32 +270,71 @@ export function ReaderScreen({ navigation, route }: Props) {
 
 function createStyles(theme: AppTheme) {
   return StyleSheet.create({
+    screen: {
+      backgroundColor: theme.colors.background,
+    },
     container: {
       flex: 1,
       paddingHorizontal: theme.layout.readerHorizontalPadding,
-      paddingVertical: theme.layout.readerVerticalPadding,
+      paddingTop: theme.spacing.space_4,
+      paddingBottom: theme.spacing.space_6,
     },
-    textArea: {
-      flex: 1,
+    storyTitle: {
+      textAlign: 'center',
+      marginBottom: theme.spacing.space_4,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: theme.spacing.space_6,
+      gap: theme.spacing.space_6,
+    },
+    imageArea: {
+      minHeight: 160,
+      maxHeight: 220,
+      borderRadius: theme.radius.radius_lg,
+      backgroundColor: theme.colors.surfaceMuted,
       justifyContent: 'center',
+      alignItems: 'center',
     },
     pageText: {
       color: theme.colors.textPrimary,
     },
-    completed: {
-      marginTop: theme.spacing.space_6,
+    footer: {
+      gap: theme.spacing.space_4,
+      paddingTop: theme.spacing.space_4,
+    },
+    progressBlock: {
+      alignItems: 'center',
+      gap: theme.spacing.space_3,
+    },
+    progressText: {
       textAlign: 'center',
     },
-    footer: {
-      gap: theme.spacing.space_6,
-      paddingBottom: theme.spacing.space_4,
-    },
-    controls: {
+    controlsRow: {
       flexDirection: 'row',
       gap: theme.spacing.space_3,
     },
     controlButton: {
       flex: 1,
+    },
+    completedContainer: {
+      flex: 1,
+      paddingHorizontal: theme.layout.readerHorizontalPadding,
+      paddingVertical: theme.layout.readerVerticalPadding,
+      justifyContent: 'space-between',
+    },
+    completedBody: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: theme.spacing.space_4,
+      paddingHorizontal: theme.spacing.space_4,
+    },
+    completedTitle: {
+      textAlign: 'center',
+    },
+    completedMessage: {
+      textAlign: 'center',
     },
   });
 }
