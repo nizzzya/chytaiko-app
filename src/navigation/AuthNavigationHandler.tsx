@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import type { NavigationContainerRef } from '@react-navigation/native';
 
+import { navigationRef } from './navigationRef';
 import { useAuth } from './AuthContext';
 import type { RootStackParamList } from './types';
 
@@ -13,16 +13,22 @@ const PROTECTED_ROUTES: (keyof RootStackParamList)[] = [
 ];
 
 type AuthNavigationHandlerProps = {
-  navigationRef: NavigationContainerRef<RootStackParamList>;
+  isNavigationReady: boolean;
 };
 
+function canUseNavigationRef(): boolean {
+  return (
+    typeof navigationRef.isReady === 'function' && navigationRef.isReady()
+  );
+}
+
 export function AuthNavigationHandler({
-  navigationRef,
+  isNavigationReady,
 }: AuthNavigationHandlerProps) {
   const { user, isAuthReady } = useAuth();
 
   useEffect(() => {
-    if (!isAuthReady || !navigationRef.isReady()) {
+    if (!isAuthReady || !isNavigationReady || !canUseNavigationRef()) {
       return;
     }
 
@@ -38,7 +44,7 @@ export function AuthNavigationHandler({
         routes: [{ name: 'Onboarding' }],
       });
     }
-  }, [user, isAuthReady, navigationRef]);
+  }, [user, isAuthReady, isNavigationReady]);
 
   return null;
 }

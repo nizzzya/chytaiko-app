@@ -1,21 +1,16 @@
-import { useMemo, useRef } from 'react';
-import {
-  DarkTheme,
-  DefaultTheme,
-  NavigationContainer,
-  type NavigationContainerRef,
-} from '@react-navigation/native';
+import { useMemo, useState } from 'react';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '../theme';
 import { AuthNavigationHandler } from './AuthNavigationHandler';
 import { AuthProvider } from './AuthContext';
 import { RootNavigator } from './RootNavigator';
-import type { RootStackParamList } from './types';
+import { navigationRef } from './navigationRef';
 
 export function AppNavigation() {
   const { theme } = useAppTheme();
-  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
+  const [isNavigationReady, setIsNavigationReady] = useState(false);
 
   const navigationTheme = useMemo(() => {
     const base = theme.colorScheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -37,9 +32,13 @@ export function AppNavigation() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer ref={navigationRef} theme={navigationTheme}>
+      <NavigationContainer
+        ref={navigationRef}
+        theme={navigationTheme}
+        onReady={() => setIsNavigationReady(true)}
+      >
         <AuthProvider>
-          <AuthNavigationHandler navigationRef={navigationRef} />
+          <AuthNavigationHandler isNavigationReady={isNavigationReady} />
           <RootNavigator />
         </AuthProvider>
       </NavigationContainer>
