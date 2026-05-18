@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   AppButton,
   AppErrorState,
+  AppImage,
   AppLoadingState,
   AppScreen,
   AppText,
@@ -124,16 +125,14 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {coverSource ? (
-          <View style={styles.coverFrame}>
-            <Image
-              accessibilityIgnoresInvertColors
-              source={coverSource}
-              style={styles.coverImage}
-              resizeMode="contain"
-            />
-          </View>
-        ) : null}
+        <View style={styles.coverFrame}>
+          <AppImage
+            source={coverSource}
+            fallbackLabel="Обкладинка"
+            height={200}
+            style={styles.coverImage}
+          />
+        </View>
 
         <View style={styles.content}>
           <AppText variant="h1">{story.title}</AppText>
@@ -196,13 +195,9 @@ function createStyles(theme: AppTheme) {
     coverFrame: {
       marginHorizontal: theme.layout.screenPadding,
       marginTop: theme.spacing.space_4,
-      borderRadius: theme.radius.radius_lg,
-      backgroundColor: theme.colors.surfaceMuted,
-      overflow: 'hidden',
     },
     coverImage: {
-      width: '100%',
-      height: 200,
+      borderRadius: theme.radius.radius_lg,
     },
     content: {
       paddingHorizontal: theme.layout.screenPadding,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
@@ -7,6 +7,7 @@ import {
   AppChip,
   AppEmptyState,
   AppIconButton,
+  AppImage,
   AppScreen,
   AppText,
 } from '../../components/ui';
@@ -134,14 +135,12 @@ function StoryCatalogCard({ story, styles, onPress }: StoryCatalogCardProps) {
 
   return (
     <AppCard onPress={onPress}>
-      {coverSource ? (
-        <Image
-          accessibilityIgnoresInvertColors
-          source={coverSource}
-          style={styles.cardCover}
-          resizeMode="contain"
-        />
-      ) : null}
+      <AppImage
+        source={coverSource}
+        fallbackLabel="Обкладинка"
+        height={72}
+        style={styles.cardCover}
+      />
       <AppText variant="h3">{story.title}</AppText>
       <AppText
         variant="body"
@@ -188,11 +187,7 @@ function createStyles(theme: AppTheme) {
       gap: theme.layout.cardGap,
     },
     cardCover: {
-      width: '100%',
-      height: 72,
       marginBottom: theme.spacing.space_3,
-      borderRadius: theme.radius.radius_md,
-      backgroundColor: theme.colors.surfaceMuted,
     },
     cardDescription: {
       marginTop: theme.spacing.space_3,
