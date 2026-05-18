@@ -1,29 +1,18 @@
+import { FirebaseError } from 'firebase/app';
 import { getDownloadURL, ref } from 'firebase/storage';
 
 import { isFirebaseConfigured } from '../../../services/firebase/config';
 import { getFirebaseStorage } from '../../../services/firebase/storage';
 
-export type StoryStorageImageErrorCode =
+export type StoryStorageImageError =
+  | 'missing'
   | 'not_configured'
-  | 'invalid_path'
   | 'not_found'
   | 'unknown';
 
-export type StoryStorageImageServiceError = {
-  code: StoryStorageImageErrorCode;
-  message: string;
-};
-
 export type StoryStorageImageResult =
   | { success: true; url: string }
-  | { success: false; error: StoryStorageImageServiceError };
-
-function createError(
-  code: StoryStorageImageErrorCode,
-  message: string,
-): StoryStorageImageServiceError {
-  return { code, message };
-}
+  | { success: false; error: StoryStorageImageError };
 
 function isRemoteImageUrl(path: string): boolean {
   return /^https?:\/\//i.test(path);
@@ -39,14 +28,25 @@ function normalizeStoragePath(path: string): string | null {
   return trimmed;
 }
 
+function mapStorageError(error: unknown): StoryStorageImageError {
+  if (error instanceof FirebaseError && error.code === 'storage/object-not-found') {
+    return 'not_found';
+  }
+
+  return 'unknown';
+}
+
+/**
+ * Resolves a Firebase Storage object path to a download URL.
+ * Read-only — no uploads or writes.
+ *
+ * Paths: stories/{slug}/cover.webp, stories/{slug}/page-001.webp (§20 TECHNICAL_PASSPORT).
+ */
 export async function resolveStorageImageUrl(
   path: string | null | undefined,
 ): Promise<StoryStorageImageResult> {
   if (!path?.trim()) {
-    return {
-      success: false,
-      error: createError('invalid_path', 'Невірний шлях до зображення.'),
-    };
+    return { success: false, error: 'missing' };
   }
 
   const normalizedPath = path.trim();
@@ -56,22 +56,13 @@ export async function resolveStorageImageUrl(
   }
 
   if (!isFirebaseConfigured()) {
-    return {
-      success: false,
-      error: createError(
-        'not_configured',
-        'Зображення з хмари недоступні без налаштування Firebase.',
-      ),
-    };
+    return { success: false, error: 'not_configured' };
   }
 
   const storagePath = normalizeStoragePath(normalizedPath);
 
   if (!storagePath) {
-    return {
-      success: false,
-      error: createError('invalid_path', 'Невірний шлях до зображення.'),
-    };
+    return { success: false, error: 'missing' };
   }
 
   try {
@@ -79,10 +70,7 @@ export async function resolveStorageImageUrl(
     const url = await getDownloadURL(storageRef);
 
     return { success: true, url };
-  } catch {
-    return {
-      success: false,
-      error: createError('not_found', 'Зображення не знайдено.'),
-    };
+  } catch (error) {
+    return { success: false, error: mapStorageError(error) };
   }
 }
