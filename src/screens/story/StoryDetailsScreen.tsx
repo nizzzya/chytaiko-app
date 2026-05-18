@@ -21,21 +21,13 @@ import {
   removeFavorite,
 } from '../../features/favorites';
 import { getProgress } from '../../features/reader';
+import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { ReadingProgress } from '../../types/readingProgress';
-import type { StoryCategory } from '../../types/story';
 import { useAppTheme, type AppTheme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StoryDetails'>;
-
-const STORY_CATEGORY_LABELS: Record<StoryCategory, string> = {
-  folk: 'Народні',
-  fairy: 'Казки',
-  bedtime: 'На ніч',
-  animals: 'Тварини',
-  nature: 'Природа',
-};
 
 function getReadButtonLabel(progress: ReadingProgress | null): string {
   if (progress && !progress.completed) {

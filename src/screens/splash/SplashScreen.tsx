@@ -20,7 +20,7 @@ export function SplashScreen({ navigation }: Props) {
     <AppScreen centered>
       <AppText variant="h1">Читайко</AppText>
       <AppText variant="body" color="secondary" style={styles.subtitle}>
-        Казки для дітей
+        Казки для спокійного читання
       </AppText>
     </AppScreen>
   );

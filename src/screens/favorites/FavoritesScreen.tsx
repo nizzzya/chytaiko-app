@@ -16,20 +16,13 @@ import {
   subscribeHydration,
 } from '../../features/app/services/appHydrationService';
 import { getFavorites, removeFavorite } from '../../features/favorites';
+import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
-import type { Story, StoryCategory } from '../../types/story';
+import type { Story } from '../../types/story';
 import { useAppTheme, type AppTheme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Favorites'>;
-
-const STORY_CATEGORY_LABELS: Record<StoryCategory, string> = {
-  folk: 'Народні',
-  fairy: 'Казки',
-  bedtime: 'На ніч',
-  animals: 'Тварини',
-  nature: 'Природа',
-};
 
 export function FavoritesScreen({ navigation }: Props) {
   const { theme } = useAppTheme();

@@ -10,9 +10,10 @@ import {
   AppScreen,
   AppText,
 } from '../../components/ui';
+import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
 import { getStories } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
-import type { Story, StoryAgeGroup, StoryCategory } from '../../types/story';
+import type { Story, StoryAgeGroup } from '../../types/story';
 import { useAppTheme, type AppTheme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -25,14 +26,6 @@ const AGE_FILTERS: { id: AgeFilter; label: string }[] = [
   { id: '5+', label: '5+' },
   { id: '6+', label: '6+' },
 ];
-
-const STORY_CATEGORY_LABELS: Record<StoryCategory, string> = {
-  folk: 'Народні',
-  fairy: 'Казки',
-  bedtime: 'На ніч',
-  animals: 'Тварини',
-  nature: 'Природа',
-};
 
 export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
