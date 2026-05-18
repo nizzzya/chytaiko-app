@@ -1,13 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import {
+  isStoriesCatalogReady,
+  subscribeStoriesCatalogReady,
+} from '../../features/app/services/appHydrationService';
 import {
   AppCard,
   AppChip,
   AppEmptyState,
   AppIconButton,
   AppImage,
+  AppLoadingState,
   AppScreen,
   AppText,
 } from '../../components/ui';
@@ -33,8 +38,17 @@ export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
+  const [storiesReady, setStoriesReady] = useState(isStoriesCatalogReady());
 
-  const activeStories = useMemo(() => getStories(), []);
+  useEffect(() => subscribeStoriesCatalogReady(() => setStoriesReady(true)), []);
+
+  const activeStories = useMemo(() => {
+    if (!storiesReady) {
+      return [];
+    }
+
+    return getStories();
+  }, [storiesReady]);
 
   const visibleStories = useMemo(() => {
     if (ageFilter === 'all') {
@@ -43,6 +57,14 @@ export function HomeScreen({ navigation }: Props) {
 
     return activeStories.filter((story) => story.ageGroup === ageFilter);
   }, [activeStories, ageFilter]);
+
+  if (!storiesReady) {
+    return (
+      <AppScreen>
+        <AppLoadingState variant="bar" />
+      </AppScreen>
+    );
+  }
 
   if (activeStories.length === 0) {
     return (
