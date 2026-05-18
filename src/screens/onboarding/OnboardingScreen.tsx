@@ -21,9 +21,17 @@ export function OnboardingScreen({ navigation }: Props) {
         <AppText variant="body" color="secondary" style={styles.subtitle}>
           Українські казки для спокійного читання
         </AppText>
+        <AppText variant="body" color="secondary" style={styles.message}>
+          Читати казки можна без акаунта.
+        </AppText>
         <View style={styles.buttons}>
           <AppButton
+            label="До каталогу"
+            onPress={() => navigation.navigate('Home')}
+          />
+          <AppButton
             label="Увійти"
+            variant="secondary"
             onPress={() => navigation.navigate('Login')}
           />
           <AppButton
@@ -48,6 +56,10 @@ function createStyles(theme: AppTheme) {
     },
     subtitle: {
       marginTop: theme.spacing.space_2,
+      textAlign: 'center',
+    },
+    message: {
+      marginTop: theme.spacing.space_6,
       textAlign: 'center',
     },
     buttons: {
