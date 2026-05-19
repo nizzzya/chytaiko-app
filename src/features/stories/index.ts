@@ -1,1 +1,6 @@
-// Stories feature — Phase 4 (see docs/TECHNICAL_PASSPORT.md §14)
+export {
+  getStories,
+  getStoryById,
+  getStoryPages,
+  initializeStoriesData,
+} from './services/storiesService';

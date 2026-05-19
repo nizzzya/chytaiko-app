@@ -9,7 +9,6 @@
       "ios",
       "android"
     ],
-    "main": "index.ts",
     "scheme": "chytaiko",
     "plugins": [
       "expo-asset",

@@ -37,18 +37,31 @@ This project is NOT initially:
 
 # 2. MVP Scope
 
+**Access model: Public-first**
+
+Reading stories does **not** require authentication.
+
 Included:
 
-- User authentication
-- Parent profile
-- Story catalog
-- Story categories
+**Public (no login required):**
+
+- Story catalog (Home)
 - Story details screen
 - Reader mode
 - Page illustrations
-- Favorites
-- Reading progress
-- User profile
+- Favorites (local-first MVP, persisted with AsyncStorage)
+- Reading progress (local-first MVP, persisted with AsyncStorage)
+
+**Optional account (Profile):**
+
+- User authentication (email/password) — optional
+- Login / Register screens
+- Parent profile (account area)
+- Logout
+
+**Rule:**
+
+> **AUTH MUST NOT GATE READING.**
 
 Excluded from MVP:
 
@@ -69,18 +82,30 @@ Excluded from MVP:
 
 # 3. User Roles
 
-Current roles:
+## Guest (default)
 
-## Parent
+Anyone using the app without signing in.
 
-Capabilities:
+Capabilities (MVP):
 
-- Login
-- View stories
+- View story catalog
 - Open stories
 - Read pages
-- Add favorites
-- Save progress
+- Add favorites (local device, AsyncStorage — no login)
+- Save reading progress (local device, AsyncStorage — no login)
+- Open Profile and choose Login / Register
+
+No login required.
+
+## Parent (optional, signed in)
+
+Same reading capabilities as Guest, plus:
+
+- Account identity (email)
+- Profile with logout
+- Foundation for future cloud sync of favorites and progress
+
+Auth is optional and belongs to Profile / account features — not to reading.
 
 Future roles (NOT MVP):
 
@@ -93,21 +118,24 @@ Future roles (NOT MVP):
 
 # 4. Screens
 
-Authentication:
+**Public screens (no auth required):**
 
 1. Splash
-2. Onboarding
-3. Login
-4. Register
+2. Home
+3. Story Details
+4. Reader
+5. Favorites
 
-Main:
+**Account screens (optional auth):**
 
-5. Home
-6. Categories
-7. Story Details
-8. Reader
-9. Favorites
-10. Profile
+6. Login
+7. Register
+8. Profile
+
+**Secondary / future in stack:**
+
+9. Onboarding (optional entry — not required before reading)
+10. Categories (future catalog filter)
 
 Future:
 
@@ -120,29 +148,21 @@ Future:
 
 # 5. User Flow
 
+**Public-first flow (default):**
+
 User opens app
+
+↓
 
 Splash
 
 ↓
 
-Onboarding
+Home (catalog)
 
 ↓
 
-Login/Register
-
-↓
-
-Home
-
-↓
-
-Select category
-
-↓
-
-Open story
+Story Details
 
 ↓
 
@@ -150,31 +170,60 @@ Reader
 
 ↓
 
-Save progress
+(Local progress saved automatically)
 
 ↓
 
-Favorites/Profile
+Favorites (local list)
+
+**Optional account flow (from Profile only):**
+
+Profile
+
+↓
+
+Login or Register (optional)
+
+↓
+
+Return to reading — no re-gating
+
+**Rules:**
+
+- Login / Register are **not** required before reading
+- Splash goes to **Home** by default
+- Auth never blocks app startup
 
 ---
 
 # 6. Firebase Architecture
 
-Firebase services:
+Firebase is **optional in MVP runtime**. The app must open and support reading without Firebase configuration (mock / demo mode).
+
+Firebase services (when configured):
 
 Auth:
-- Email/password
+- Email/password — optional; Profile and Login / Register only
+- **Must not block app startup** if env vars are missing
 
-Firestore:
-- Stories
-- Pages
-- Favorites
-- Progress
+Firestore (future data layer):
+- Stories (catalog)
+- Story pages
 - User profiles
+- Favorites (cloud sync — post-MVP)
+- Reading progress (cloud sync — post-MVP)
 
-Storage:
+Storage (future):
 - Covers
 - Page illustrations
+
+**MVP local-first (no Firestore required to read):**
+
+- Story catalog → mock service
+- Favorites → local mock service, **persisted with AsyncStorage** on device
+- Reading progress → local mock service, **persisted with AsyncStorage** on device
+- Auth is optional; signed-in account may enable **cloud sync in a future phase** (not MVP)
+- Firestore sync for favorites and progress is **future** — not a current MVP requirement
 
 Future:
 
@@ -376,39 +425,42 @@ Never load full library
 
 # 12. Security Rules
 
+**Principle: AUTH MUST NOT GATE READING.**
+
 Firestore:
 
-No open access
+No open writes
 
 Forbidden:
 
 allow read, write: if true;
 
-Required:
+**Stories & pages (when on Firestore):**
 
-Authenticated access
+- Read access for catalog content must not require login for the public-first app model
+- Client writes denied in MVP (ingestion via Console / CLI only)
 
-User data isolation
+**User-owned data (when on Firestore):**
 
-Favorites:
+- `favorites` — owner only
+- `readingProgress` — owner only
+- `users` — owner only
 
-Owner only
+**MVP before Firestore:**
 
-Progress:
-
-Owner only
-
-Stories:
-
-Read-only
+- Favorites and progress stay on device (AsyncStorage via local mock services)
+- No auth check to read stories
+- App must work **without login** and **without Firebase env** for reading
 
 Storage:
 
-Public only for story assets
+- Story assets (covers, pages) — read-only for app users when integrated
+- User files — private
 
-User files:
+Auth errors:
 
-Private
+- Confined to Login / Register screens only
+- Never crash or block Splash, Home, Reader, Favorites
 
 ---
 
@@ -451,25 +503,37 @@ Phase 1:
 Project setup
 
 Phase 2:
-Firebase integration
+Theme system
 
 Phase 3:
-Auth
+Navigation (public-first)
 
 Phase 4:
-Story catalog
+Story catalog (mock)
 
 Phase 5:
 Reader
 
 Phase 6:
-Favorites
+Favorites (local-first, AsyncStorage)
 
 Phase 7:
-Progress
+Reading progress (local-first, AsyncStorage)
 
 Phase 8:
+Optional auth (Profile, Login, Register)
+
+Phase 9:
+Firebase foundation (non-blocking)
+
+Phase 10:
 UI polish
+
+**Rules:**
+
+- Ship public reading path before requiring any Firebase env
+- **AUTH MUST NOT GATE READING**
+- Do not add navigation guards that force Login before Home / Reader
 
 No feature expansion before MVP completion.
 
@@ -479,11 +543,15 @@ No feature expansion before MVP completion.
 
 Possible extensions:
 
+Cloud sync for favorites and reading progress (Firestore, per-account) — **post-MVP; not required for current release**
+
+Firestore-backed story catalog (replace mock service)
+
+Offline reading
+
 Audio books
 
 Child profile
-
-Offline reading
 
 Premium library
 
@@ -502,6 +570,8 @@ Cloud Functions backend
 Multi-language support
 
 These features are NOT part of MVP.
+
+MVP stays public-first: reading remains free of mandatory login even after Firebase data integration.
 
 ---
 
@@ -574,11 +644,17 @@ Document ID: auto-generated or explicit `id` (must match `id` field)
 | `category` | string | yes | Category slug or id |
 | `coverImage` | string | yes | Storage path or download URL |
 | `pageCount` | number | yes | Total pages; must match `storyPages` count |
-| `status` | string | yes | `draft` \| `published` — MVP catalog reads `published` only |
+| `status` | string | yes | `draft` \| `active` — MVP catalog reads `active` only; `draft` is hidden from users |
 | `createdAt` | timestamp | yes | |
 | `updatedAt` | timestamp | yes | |
 
-**Ownership:** Authenticated users read `published` stories only. No client writes in MVP.
+**Story status rules:**
+
+- `active` — visible in catalog and readable by all users (public)
+- `draft` — hidden from catalog; not shown to users in MVP
+- Do not use `published` (outdated; replaced by `active`)
+
+**Ownership:** Public read for `active` stories only. No client writes in MVP.
 
 ---
 
@@ -595,7 +671,7 @@ Document ID: auto-generated or `{storyId}_{pageNumber}`
 | `imageUrl` | string | no | Storage path or URL; null if text-only page |
 | `createdAt` | timestamp | yes | |
 
-**Ownership:** Authenticated read only. Query by `storyId` + order by `pageNumber`. No client writes in MVP.
+**Ownership:** Public read. Query by `storyId` + order by `pageNumber`. No client writes in MVP.
 
 ---
 
@@ -636,8 +712,8 @@ Document ID: recommended `{userId}_{storyId}`
 | Collection | Client read | Client write |
 |------------|-------------|--------------|
 | `users` | Own doc only | Own doc only |
-| `stories` | Authenticated (`published`) | None (MVP) |
-| `storyPages` | Authenticated | None (MVP) |
+| `stories` | Public read (`active` only) when on Firestore; mock without Firebase | None (MVP) |
+| `storyPages` | Public read when on Firestore; mock without Firebase | None (MVP) |
 | `favorites` | Own docs only | Own docs only |
 | `readingProgress` | Own docs only | Own docs only |
 
@@ -645,29 +721,62 @@ Content ingestion (stories, pages, images): manual upload via Firebase Console /
 
 ---
 
+## Firebase seed (development only)
+
+- Development uses **test content only** — no final story content before development is explicitly complete.
+- No copyrighted material without clear rights.
+- **Seed collections:** `stories`, `storyPages` only (not `users`, `favorites`, or `readingProgress` in MVP seeding).
+- **Status:** `draft` — hidden from catalog; `active` — visible (see Story status rules above).
+- **Storage naming** (§20): `stories/{story-slug}/cover.webp`, `page-001.webp`, … — **WEBP only**, 3-digit zero-padded page files.
+- No automated seed scripts in the repo; manual Console / CLI ingestion only.
+
+---
+
+## Firestore indexes (development foundation only)
+
+Composite indexes live in `firestore.indexes.json` (referenced by `firebase.json`). Deploy with rules when the Firebase project is ready.
+
+| Collection | Index fields |
+|------------|----------------|
+| `stories` | `status` ASC, `createdAt` DESC |
+| `stories` | `status` ASC, `title` ASC |
+| `storyPages` | `storyId` ASC, `pageNumber` ASC |
+| `favorites` | `userId` ASC, `updatedAt` DESC |
+| `readingProgress` | `userId` ASC, `updatedAt` DESC |
+
+MVP catalog queries may sort client-side until Firestore `orderBy` is adopted; indexes are provisioned for near-future server-side queries and cloud sync.
+
+---
+
 # 18. Firestore Access Rules
 
-MVP security model. No public writes. No open collections.
+Target security model when Firestore replaces mocks. **Current MVP app does not require Firestore to read.**
 
 ```
 // Principle: deny by default; allow explicitly
+// AUTH MUST NOT GATE READING — catalog is public read
 ```
 
 | Collection | Read | Write | Delete |
 |------------|------|-------|--------|
-| **Stories** | Authenticated; `status == 'published'` | Denied | Denied |
-| **Story pages** | Authenticated | Denied | Denied |
-| **Favorites** | Owner (`userId == auth.uid`) | Owner create/update | Owner |
-| **Reading progress** | Owner (`userId == auth.uid`) | Owner create/update | Owner |
+| **Stories** | Public; `status == 'active'` | Denied | Denied |
+| **Story pages** | Public | Denied | Denied |
+| **Favorites** | Owner (`userId == auth.uid`) when signed in | Owner create/update | Owner |
+| **Reading progress** | Owner (`userId == auth.uid`) when signed in | Owner create/update | Owner |
 | **Users** | Owner (`uid == auth.uid`) | Owner | Denied (or owner soft-delete only if added later) |
 
 **Global rules:**
 
-- `request.auth != null` required for all reads except none — everything requires auth in MVP
+- Story catalog and pages: **no auth required to read**
+- Favorites and progress: require auth only when syncing to Firestore (future); local MVP uses AsyncStorage without login
 - No `allow read, write: if true`
-- No unauthenticated catalog access
 - No cross-user reads on `favorites` or `readingProgress`
 - Story content writes only via Admin SDK / Console (outside app)
+
+**MVP without Firestore:**
+
+- App uses mock catalog and local favorites/progress (AsyncStorage) — Firestore rules do not apply at runtime
+- Reading, favorites, and progress work with no Firebase configuration
 
 ---
 
@@ -675,13 +784,30 @@ MVP security model. No public writes. No open collections.
 
 UI states must map to `DESIGN_CODE.md` components (§27–§28, §32). No crash on empty or error.
 
+Public screens (Home, Story Details, Reader, Favorites) must load without auth. **AUTH MUST NOT GATE READING.**
+
+---
+
+## Splash
+
+```
+initializing → navigate Home
+```
+
+| State | Data | UI |
+|-------|------|-----|
+| `initializing` | No auth wait | Brand / calm loader |
+| `done` | Route ready | Navigate to **Home** — never to Login |
+
+Firebase init and auth subscription run in background; Splash does not block on them.
+
 ---
 
 ## Home
 
 ```
 loading → success
-loading → empty (no published stories)
+loading → empty (no active stories)
 loading → error → retry → loading
 ```
 
@@ -728,6 +854,8 @@ reading → completed (last page reached)
 
 ## Favorites
 
+Public screen. Works without login (local mock in MVP).
+
 ```
 loading → success
 loading → empty
@@ -745,16 +873,18 @@ loading → error → retry → loading
 
 ## Profile
 
+Optional auth. Does not gate reading.
+
 ```
-loading → success
-loading → error → retry → loading
+guest → success (logged out UI)
+authenticated → success (user info + logout)
 ```
 
 | State | Data | UI |
 |-------|------|-----|
-| `loading` | User profile | Skeleton rows |
-| `success` | Profile loaded | Settings, theme toggle |
-| `error` | Profile failed | Error State + retry |
+| `guest` | No Firebase user | Login + Register buttons |
+| `authenticated` | User signed in | Email, logout, settings (future) |
+| `auth_error` | Login/Register only | Error on auth screens — not on Profile startup |
 
 ---
 
@@ -789,7 +919,7 @@ stories/
 - `Cover.PNG`, mixed case extensions
 - Non-sequential gaps without documented reason
 
-**Access:** Story assets read-only for authenticated app users; writes via Console/CLI only in MVP.
+**Access:** Story assets read-only for app users (no login required to read); writes via Console/CLI only in MVP.
 
 ---
 
@@ -797,14 +927,17 @@ stories/
 
 | Environment | Purpose |
 |-------------|---------|
-| `development` | Local Expo dev; Firebase dev project |
-| `production` | Store builds; Firebase production project |
+| `development` | Local Expo dev; Firebase dev project (optional) |
+| `production` | Store builds; Firebase production project (optional) |
 
 **MVP:**
 
 - **No test/staging environment** — reduces config drift and cost
+- **App must work without `.env`** — mock story catalog; favorites and reading progress on device via AsyncStorage
+- **App must work without login** — auth is optional (Profile only); no Firebase env required to read
 - Firebase config per environment in env files (e.g. `.env.development`, `.env.production`) — not committed with secrets
-- Use `app.config.js` / Expo `extra` to inject public Firebase keys at build time
+- Use `app.config.js` / Expo `extra` to inject public Firebase keys at build time when present
+- Missing `EXPO_PUBLIC_FIREBASE_*` vars must **not** crash the app or block Splash → Home
 
 **Rules:**
 
@@ -812,6 +945,7 @@ stories/
 - No secrets inside React components or screens
 - No hardcoded story IDs, user IDs, or collection paths in UI — use constants module
 - `DESIGN_CODE.md` tokens for UI; Firebase config for backend only
+- Firebase Auth errors stay inside Login / Register — never on public screens
 
 ---
 
@@ -843,7 +977,7 @@ Fail gracefully. Fallback UI required — no crash-first behavior.
 | **Empty data** | Render Empty State | §32 — context-specific copy |
 | **Missing image** | Show text-only page or soft placeholder; log in dev | Reader §26 — collapse image area |
 | **Failed story load** | Error State + retry | §32 Error |
-| **Auth error** | Clear message; route to Login | No stack trace to user |
+| **Auth error** | Clear message on Login / Register only | No stack trace; never block reading |
 | **Network failure** | Offline empty state when appropriate | §32 Offline |
 
 **Implementation rules:**
@@ -913,11 +1047,14 @@ page-003.webp
 
 | Area | Frozen choice |
 |------|----------------|
+| Access model | **Public-first** — reading without login |
 | Runtime | Expo |
 | UI framework | React Native |
-| Auth | Firebase Auth |
-| Database | Firestore |
-| Files | Firebase Storage |
+| Auth | Firebase Auth (optional — Profile only) |
+| Data (MVP) | Mock stories + local favorites/progress (AsyncStorage) |
+| Cloud sync | **Future** — Firestore per-account (not MVP) |
+| Database (future) | Firestore |
+| Files (future) | Firebase Storage |
 | Backend | **No backend server** |
 | Architecture | **No microservices** |
 | Admin | **No admin panel** |
@@ -928,6 +1065,8 @@ page-003.webp
 **Also frozen (see §2, §14):**
 
 - No audio, offline, push, comments, social, child accounts, gamification in MVP
+- **AUTH MUST NOT GATE READING**
+- No mandatory Login before Home, Story Details, Reader, or Favorites
 
 **Visual source of truth:** `DESIGN_CODE.md` v1.0 — implementation must not drift from tokens, Reader contract, or illustration rules.
 

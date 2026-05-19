@@ -531,13 +531,52 @@ Request confirmation.
 
 ---
 
+## STRICT NO-COMMAND POLICY
+
+Cursor must never execute commands.
+
+Cursor must only edit files requested by the user.
+
+Cursor must not validate by running tools.
+
+Cursor must not start Metro, Expo, TypeScript, tests, lint, builds, npm, or git.
+
+Cursor must never claim runtime verification unless the user provided the result.
+
+Hard-blocked (never run via terminal, shell, or task tools):
+
+- git (status, diff, log, commit, push, pull, branch, etc.)
+- npm install, npm start, npm run, npx
+- npx expo start, Expo CLI, Metro bundler
+- tsc, tsc --noEmit, type checks
+- lint, eslint, prettier --check
+- tests (jest, vitest, detox, etc.)
+- build commands (expo export, eas build, etc.)
+- expo-doctor, npm audit, npm audit fix
+- emulator or simulator launch commands
+- inspecting runtime logs or dev-server output
+
+After each change, Cursor lists manual checks for the user — commands the user runs locally, not Cursor.
+
+---
+
 ## OUTPUT RULES
+
+Every response must include:
+
+- Files changed
+- Changes
+- Manual checks for user
 
 Output only:
 
 Files changed
 
 Changes
+
+Manual checks for user
+
+Manual checks are commands or instructions for the user to run, not Cursor.
 
 No explanations.
 
