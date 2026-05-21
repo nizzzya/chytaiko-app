@@ -7,6 +7,7 @@ import {
   AppButton,
   AppCard,
   AppEmptyState,
+  AppErrorState,
   AppLoadingState,
   AppScreen,
   AppText,
@@ -28,6 +29,7 @@ export function FavoritesScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [stories, setStories] = useState<Story[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [hydrationReady, setHydrationReady] = useState(isHydrated());
 
   useEffect(() => subscribeHydration(() => setHydrationReady(true)), []);
@@ -36,9 +38,12 @@ export function FavoritesScreen({ navigation }: Props) {
     const result = getFavorites();
 
     if (!result.success) {
+      setLoadFailed(true);
       setStories([]);
       return;
     }
+
+    setLoadFailed(false);
 
     const favoriteStories = result.data
       .map((favorite) => getStoryById(favorite.storyId))
@@ -74,6 +79,19 @@ export function FavoritesScreen({ navigation }: Props) {
     return (
       <AppScreen>
         <AppLoadingState variant="bar" />
+      </AppScreen>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <AppScreen centered>
+        <AppErrorState
+          title="Не вдалося завантажити обране"
+          message="Спробуйте пізніше або поверніться до каталогу."
+          actionLabel="До каталогу"
+          onRetry={() => navigation.navigate('Home')}
+        />
       </AppScreen>
     );
   }

@@ -15,11 +15,19 @@ export function ProfileScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [loading, setLoading] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
 
   const handleLogout = async () => {
+    setLogoutError(null);
     setLoading(true);
-    await logout();
+
+    const result = await logout();
+
     setLoading(false);
+
+    if (!result.success) {
+      setLogoutError(result.error.message);
+    }
   };
 
   return (
@@ -35,6 +43,7 @@ export function ProfileScreen({ navigation }: Props) {
             email={user.email}
             styles={styles}
             loading={loading}
+            logoutError={logoutError}
             onLogout={handleLogout}
           />
         ) : (
@@ -86,6 +95,7 @@ type LoggedInContentProps = {
   email: string | null;
   styles: ReturnType<typeof createStyles>;
   loading: boolean;
+  logoutError: string | null;
   onLogout: () => void;
 };
 
@@ -93,6 +103,7 @@ function LoggedInContent({
   email,
   styles,
   loading,
+  logoutError,
   onLogout,
 }: LoggedInContentProps) {
   return (
@@ -114,6 +125,11 @@ function LoggedInContent({
         disabled={loading}
         style={styles.action}
       />
+      {logoutError ? (
+        <AppText variant="caption" color="error" style={styles.logoutError}>
+          {logoutError}
+        </AppText>
+      ) : null}
     </View>
   );
 }
@@ -138,6 +154,9 @@ function createStyles(theme: AppTheme) {
     },
     action: {
       marginTop: theme.spacing.space_4,
+    },
+    logoutError: {
+      marginTop: theme.spacing.space_2,
     },
     catalogButton: {
       marginTop: theme.spacing.space_10,
