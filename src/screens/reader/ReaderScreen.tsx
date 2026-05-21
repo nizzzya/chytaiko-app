@@ -19,6 +19,7 @@ import {
   getProgress,
   markCompleted,
   saveProgress,
+  saveReaderSession,
 } from '../../features/reader';
 import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
 import {
@@ -51,6 +52,7 @@ export function ReaderScreen({ navigation, route }: Props) {
     if (!result.success || !result.data) {
       setCurrentPage(1);
       setIsCompleted(false);
+      saveReaderSession(storyId, 1);
       return;
     }
 
@@ -61,6 +63,7 @@ export function ReaderScreen({ navigation, route }: Props) {
 
     setCurrentPage(lastPage);
     setIsCompleted(result.data.completed);
+    saveReaderSession(storyId, lastPage);
   }, [storyId, pages.length]);
 
   useEffect(() => {
@@ -130,6 +133,7 @@ export function ReaderScreen({ navigation, route }: Props) {
       onPageChange={setCurrentPage}
       onComplete={() => {
         saveProgress(storyId, pages.length);
+        saveReaderSession(storyId, pages.length);
         markCompleted(storyId);
         setIsCompleted(true);
       }}
@@ -170,6 +174,7 @@ function ReaderContent({
     const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
     onPageChange(clampedPage);
     saveProgress(storyId, clampedPage);
+    saveReaderSession(storyId, clampedPage);
   };
 
   const handlePrevious = () => {
