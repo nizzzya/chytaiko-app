@@ -16,9 +16,11 @@ import {
   subscribeHydration,
 } from '../../features/app/services/appHydrationService';
 import {
+  clearReaderSession,
   getProgress,
   markCompleted,
   saveProgress,
+  saveReaderSession,
 } from '../../features/reader';
 import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
 import {
@@ -51,6 +53,7 @@ export function ReaderScreen({ navigation, route }: Props) {
     if (!result.success || !result.data) {
       setCurrentPage(1);
       setIsCompleted(false);
+      saveReaderSession(storyId, 1);
       return;
     }
 
@@ -61,6 +64,7 @@ export function ReaderScreen({ navigation, route }: Props) {
 
     setCurrentPage(lastPage);
     setIsCompleted(result.data.completed);
+    saveReaderSession(storyId, lastPage);
   }, [storyId, pages.length]);
 
   useEffect(() => {
@@ -131,6 +135,7 @@ export function ReaderScreen({ navigation, route }: Props) {
       onComplete={() => {
         saveProgress(storyId, pages.length);
         markCompleted(storyId);
+        clearReaderSession();
         setIsCompleted(true);
       }}
       onBackToStory={goToStoryDetails}
@@ -170,6 +175,7 @@ function ReaderContent({
     const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
     onPageChange(clampedPage);
     saveProgress(storyId, clampedPage);
+    saveReaderSession(storyId, clampedPage);
   };
 
   const handlePrevious = () => {
