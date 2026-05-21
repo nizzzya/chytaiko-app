@@ -2,17 +2,16 @@
   "expo": {
     "name": "Chytayko",
     "slug": "chytaiko",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "scheme": "chytaiko",
-    "plugins": [
-      "expo-asset",
-      "expo-font"
-    ]
+    "assetBundlePatterns": ["assets/stories/**/*"],
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F3EDE4"
+    },
+    "plugins": ["expo-asset", "expo-font"]
   }
 }
