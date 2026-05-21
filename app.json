@@ -12,6 +12,13 @@
       "resizeMode": "contain",
       "backgroundColor": "#F3EDE4"
     },
+    "extra": {
+      "identityAssetsTodo": {
+        "icon": "./assets/identity/icon.png",
+        "splashImage": "./assets/identity/splash.png",
+        "androidAdaptiveIconForeground": "./assets/identity/adaptive-icon.png"
+      }
+    },
     "plugins": ["expo-asset", "expo-font"]
   }
 }
