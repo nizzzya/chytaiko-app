@@ -13,6 +13,7 @@ export function LoginScreen({ navigation }: Props) {
       submitLabel="Увійти"
       onSubmit={loginWithEmail}
       onSuccess={() => navigation.replace('Home')}
+      onReadWithoutAccount={() => navigation.replace('Home')}
       alternateAction={{
         label: 'Створити акаунт',
         onPress: () => navigation.navigate('Register'),
