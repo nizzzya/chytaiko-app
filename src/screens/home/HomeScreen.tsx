@@ -4,9 +4,12 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { useNetworkStatus } from '../../features/app/hooks/useNetworkStatus';
 import {
+  isHydrated,
   isStoriesCatalogReady,
+  subscribeHydration,
   subscribeStoriesCatalogReady,
 } from '../../features/app/services/appHydrationService';
+import { getLastReaderSession } from '../../features/reader';
 import {
   AppCard,
   AppChip,
@@ -19,7 +22,10 @@ import {
 } from '../../components/ui';
 import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
 import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
-import { getStories } from '../../features/stories/services/storiesService';
+import {
+  getStories,
+  getStoryById,
+} from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { Story, StoryAgeGroup } from '../../types/story';
 import { useAppTheme, type AppTheme } from '../../theme';
@@ -40,9 +46,11 @@ export function HomeScreen({ navigation }: Props) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
   const [storiesReady, setStoriesReady] = useState(isStoriesCatalogReady());
+  const [localDataReady, setLocalDataReady] = useState(isHydrated());
   const { isOnline } = useNetworkStatus();
 
   useEffect(() => subscribeStoriesCatalogReady(() => setStoriesReady(true)), []);
+  useEffect(() => subscribeHydration(() => setLocalDataReady(true)), []);
 
   const activeStories = useMemo(() => {
     if (!storiesReady) {
@@ -59,6 +67,29 @@ export function HomeScreen({ navigation }: Props) {
 
     return activeStories.filter((story) => story.ageGroup === ageFilter);
   }, [activeStories, ageFilter]);
+
+  const continueReading = useMemo(() => {
+    if (!localDataReady) {
+      return null;
+    }
+
+    const session = getLastReaderSession();
+
+    if (!session) {
+      return null;
+    }
+
+    const story = getStoryById(session.lastOpenedStoryId);
+
+    if (!story) {
+      return null;
+    }
+
+    return {
+      story,
+      page: session.lastOpenedPage,
+    };
+  }, [localDataReady, activeStories]);
 
   if (!storiesReady) {
     return (
@@ -120,6 +151,29 @@ export function HomeScreen({ navigation }: Props) {
             />
           ))}
         </ScrollView>
+
+        {continueReading ? (
+          <AppCard
+            onPress={() =>
+              navigation.navigate('Reader', {
+                storyId: continueReading.story.id,
+              })
+            }
+          >
+            <AppText variant="h3">Продовжити читання</AppText>
+            <AppText
+              variant="body"
+              color="secondary"
+              numberOfLines={2}
+              style={styles.continueTitle}
+            >
+              {continueReading.story.title}
+            </AppText>
+            <AppText variant="caption" color="muted">
+              Сторінка {continueReading.page}
+            </AppText>
+          </AppCard>
+        ) : null}
 
         {!isOnline ? (
           <AppText variant="caption" color="secondary" style={styles.offlineNote}>
@@ -212,6 +266,9 @@ function createStyles(theme: AppTheme) {
     chipRow: {
       gap: theme.spacing.space_2,
       paddingRight: theme.layout.screenPadding,
+    },
+    continueTitle: {
+      marginTop: theme.spacing.space_2,
     },
     offlineNote: {
       marginTop: theme.spacing.space_1,
