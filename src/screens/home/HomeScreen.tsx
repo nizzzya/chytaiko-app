@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { useNetworkStatus } from '../../features/app/hooks/useNetworkStatus';
 import {
   isStoriesCatalogReady,
   subscribeStoriesCatalogReady,
@@ -39,6 +40,7 @@ export function HomeScreen({ navigation }: Props) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
   const [storiesReady, setStoriesReady] = useState(isStoriesCatalogReady());
+  const { isOnline } = useNetworkStatus();
 
   useEffect(() => subscribeStoriesCatalogReady(() => setStoriesReady(true)), []);
 
@@ -118,6 +120,12 @@ export function HomeScreen({ navigation }: Props) {
             />
           ))}
         </ScrollView>
+
+        {!isOnline ? (
+          <AppText variant="caption" color="secondary" style={styles.offlineNote}>
+            Ви офлайн. Збережені казки та прогрес залишаються доступними.
+          </AppText>
+        ) : null}
 
         {visibleStories.length === 0 ? (
           <AppEmptyState
@@ -204,6 +212,9 @@ function createStyles(theme: AppTheme) {
     chipRow: {
       gap: theme.spacing.space_2,
       paddingRight: theme.layout.screenPadding,
+    },
+    offlineNote: {
+      marginTop: theme.spacing.space_1,
     },
     catalog: {
       gap: theme.layout.cardGap,
