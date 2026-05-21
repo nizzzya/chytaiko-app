@@ -16,6 +16,7 @@ import {
   subscribeHydration,
 } from '../../features/app/services/appHydrationService';
 import {
+  clearReaderSession,
   getProgress,
   markCompleted,
   saveProgress,
@@ -133,8 +134,8 @@ export function ReaderScreen({ navigation, route }: Props) {
       onPageChange={setCurrentPage}
       onComplete={() => {
         saveProgress(storyId, pages.length);
-        saveReaderSession(storyId, pages.length);
         markCompleted(storyId);
+        clearReaderSession();
         setIsCompleted(true);
       }}
       onBackToStory={goToStoryDetails}
