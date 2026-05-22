@@ -1,0 +1,13 @@
+Chytayko — Android adaptive icon placeholder (Phase 15.2)
+
+Do not reference this file from app.json.
+
+Before release:
+1. Add PNG: assets/identity/adaptive-icon.png (1024×1024, foreground)
+2. Set in app.json under expo.android:
+   "adaptiveIcon": {
+     "foregroundImage": "./assets/identity/adaptive-icon.png",
+     "backgroundColor": "#F3EDE4"
+   }
+
+Until then, Android uses the default adaptive icon in dev builds.

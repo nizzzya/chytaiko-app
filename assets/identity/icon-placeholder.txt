@@ -1,0 +1,10 @@
+Chytayko — app icon placeholder (Phase 15.2)
+
+Do not reference this file from app.json.
+
+Before release:
+1. Add PNG: assets/identity/icon.png (1024×1024 recommended)
+2. Set in app.json under expo:
+   "icon": "./assets/identity/icon.png"
+
+Until then, Expo uses the default development icon.

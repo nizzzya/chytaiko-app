@@ -368,6 +368,25 @@ Rules:
 - Features independent
 - Shared components reusable
 
+## Offline / network (MVP)
+
+**Phase status:** NetInfo integration deferred.
+
+**Current behavior:**
+
+- Fallback network service (`src/features/app/services/networkStatusService.ts`)
+- App assumes online
+- Reading not blocked
+- Favorites not blocked
+- Reader not blocked
+- Home offline banner inactive
+
+**Future activation:**
+
+- Add `@react-native-community/netinfo`
+- Enable real online/offline detection in `networkStatusService`
+- Keep public-first behavior — informational banner only; no auth gate, no retry logic, no cloud sync in this phase
+
 ---
 
 # 10. UI Principles

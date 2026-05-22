@@ -2,17 +2,23 @@
   "expo": {
     "name": "Chytayko",
     "slug": "chytaiko",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "scheme": "chytaiko",
-    "plugins": [
-      "expo-asset",
-      "expo-font"
-    ]
+    "assetBundlePatterns": ["assets/stories/**/*"],
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F3EDE4"
+    },
+    "extra": {
+      "identityAssetsTodo": {
+        "icon": "./assets/identity/icon.png",
+        "splashImage": "./assets/identity/splash.png",
+        "androidAdaptiveIconForeground": "./assets/identity/adaptive-icon.png"
+      }
+    },
+    "plugins": ["expo-asset", "expo-font"]
   }
 }

@@ -1,0 +1,12 @@
+Chytayko — splash image placeholder (Phase 15.2)
+
+Do not reference this file from app.json.
+
+Current launch uses expo.splash.backgroundColor only (no splash.image).
+
+Before release:
+1. Add PNG: assets/identity/splash.png (recommended 1284×2778 or Expo splash generator output)
+2. Set in app.json under expo.splash:
+   "image": "./assets/identity/splash.png"
+
+Keep backgroundColor (#F3EDE4) for letterboxing if needed.
