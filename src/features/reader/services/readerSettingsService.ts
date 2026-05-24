@@ -140,7 +140,7 @@ export function getReaderModePresentation(
 }
 
 export function getReaderSettings(): ReaderSettings {
-  return currentSettings;
+  return { ...currentSettings };
 }
 
 export function saveReaderSettings(patch: Partial<ReaderSettings>): void {
