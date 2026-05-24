@@ -232,17 +232,11 @@ function ReaderContent({
           <View
             style={[
               styles.textBlock,
-              readerLayout.isTablet ? styles.textBlockTablet : styles.textBlockPhone,
+              !readerLayout.isTablet && styles.textBlockPhone,
               { maxWidth: readerLayout.textMaxWidth },
             ]}
           >
-            <AppText
-              variant="reader"
-              style={[
-                styles.pageText,
-                readerLayout.isTablet && styles.pageTextTablet,
-              ]}
-            >
+            <AppText variant="reader" style={styles.pageText}>
               {page.text}
             </AppText>
           </View>
@@ -362,15 +356,10 @@ function createStyles(theme: AppTheme) {
     textBlockPhone: {
       flexGrow: 1,
     },
-    textBlockTablet: {
-      alignItems: 'center',
-    },
     pageText: {
       color: theme.colors.textPrimary,
       width: '100%',
-    },
-    pageTextTablet: {
-      textAlign: 'center',
+      textAlign: 'left',
     },
     footer: {
       gap: theme.spacing.space_4,
