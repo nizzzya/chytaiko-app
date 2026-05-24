@@ -18,9 +18,12 @@ import {
 import {
   clearReaderSession,
   getProgress,
+  getReaderSettings,
   markCompleted,
   saveProgress,
   saveReaderSession,
+  saveReaderSettings,
+  subscribeReaderSettings,
   useReaderLayout,
 } from '../../features/reader';
 import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
@@ -166,12 +169,27 @@ function ReaderContent({
   onBackToStory,
 }: ReaderContentProps) {
   const readerLayout = useReaderLayout();
+  const [showIllustrations, setShowIllustrations] = useState(
+    () => getReaderSettings().showIllustrations,
+  );
   const page =
     pages.find((item) => item.pageNumber === currentPage) ?? pages[0];
   const pageIndex = page.pageNumber;
   const isFirstPage = pageIndex <= 1;
   const isLastPage = pageIndex >= pages.length;
   const pageImage = useStoryImageSource(page.imageUrl);
+
+  useEffect(
+    () =>
+      subscribeReaderSettings((settings) => {
+        setShowIllustrations(settings.showIllustrations);
+      }),
+    [],
+  );
+
+  const handleToggleIllustrations = () => {
+    saveReaderSettings({ showIllustrations: !showIllustrations });
+  };
 
   const goToPage = (nextPage: number) => {
     const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
@@ -214,25 +232,37 @@ function ReaderContent({
           {storyTitle}
         </AppText>
 
+        <AppButton
+          label={
+            showIllustrations ? 'Сховати ілюстрації' : 'Показувати ілюстрації'
+          }
+          variant="secondary"
+          onPress={handleToggleIllustrations}
+          style={styles.illustrationToggle}
+        />
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <AppImage
-            source={pageImage.source}
-            fallbackLabel="Ілюстрація"
-            height={readerLayout.imageHeight}
-            collapseWhenUnavailable={pageImage.type === 'missing'}
-            style={[
-              styles.pageImage,
-              { maxHeight: readerLayout.imageHeight },
-            ]}
-          />
+          {showIllustrations ? (
+            <AppImage
+              source={pageImage.source}
+              fallbackLabel="Ілюстрація"
+              height={readerLayout.imageHeight}
+              collapseWhenUnavailable={pageImage.type === 'missing'}
+              style={[
+                styles.pageImage,
+                { maxHeight: readerLayout.imageHeight },
+              ]}
+            />
+          ) : null}
 
           <View
             style={[
               styles.textBlock,
-              !readerLayout.isTablet && styles.textBlockPhone,
+              (!readerLayout.isTablet || !showIllustrations) &&
+                styles.textBlockPhone,
               { maxWidth: readerLayout.textMaxWidth },
             ]}
           >
@@ -338,6 +368,9 @@ function createStyles(theme: AppTheme) {
     },
     storyTitle: {
       textAlign: 'center',
+      marginBottom: theme.spacing.space_3,
+    },
+    illustrationToggle: {
       marginBottom: theme.spacing.space_4,
     },
     scrollContent: {
