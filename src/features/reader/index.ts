@@ -8,3 +8,13 @@ export {
   getLastReaderSession,
   saveReaderSession,
 } from './services/readerCacheService';
+export {
+  READER_TABLET_BREAKPOINT,
+  getReaderDeviceType,
+  getReaderLayoutMode,
+  resolveReaderLayout,
+  type ReaderDeviceType,
+  type ReaderLayoutMetrics,
+  type ReaderLayoutMode,
+} from './services/readerLayoutService';
+export { useReaderLayout } from './hooks/useReaderLayout';
