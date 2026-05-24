@@ -9,10 +9,14 @@ export {
   saveReaderSession,
 } from './services/readerCacheService';
 export {
+  getReaderModePresentation,
   getReaderSettings,
+  READER_MODE_OPTIONS,
   saveReaderSettings,
   subscribeReaderSettings,
+  type ReaderModePresentation,
   type ReaderSettings,
+  type ReadingMode,
 } from './services/readerSettingsService';
 export {
   READER_TABLET_BREAKPOINT,
