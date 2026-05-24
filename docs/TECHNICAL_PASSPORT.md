@@ -368,6 +368,25 @@ Rules:
 - Features independent
 - Shared components reusable
 
+## Offline / network (MVP)
+
+**Phase status:** NetInfo integration deferred.
+
+**Current behavior:**
+
+- Fallback network service (`src/features/app/services/networkStatusService.ts`)
+- App assumes online
+- Reading not blocked
+- Favorites not blocked
+- Reader not blocked
+- Home offline banner inactive
+
+**Future activation:**
+
+- Add `@react-native-community/netinfo`
+- Enable real online/offline detection in `networkStatusService`
+- Keep public-first behavior — informational banner only; no auth gate, no retry logic, no cloud sync in this phase
+
 ---
 
 # 10. UI Principles
@@ -1071,6 +1090,127 @@ page-003.webp
 **Visual source of truth:** `DESIGN_CODE.md` v1.0 — implementation must not drift from tokens, Reader contract, or illustration rules.
 
 **Change process:** New stack or feature → update this document (§37 in `DESIGN_CODE.md` design process applies to UI; tech changes update `TECHNICAL_PASSPORT` first).
+
+---
+
+# 26. Brand & Reading Philosophy (Frozen)
+
+Product and reading principles for Chytayko. Frozen for MVP and content phase planning. Does not change runtime behavior in §1–§25 until explicitly implemented.
+
+## 26.1 Product identity
+
+Chytayko is:
+
+- family reading product
+- tool for building reading habits
+- digital reading ritual
+- public-first reading experience
+
+**Priority order:**
+
+1. Reading habit formation
+2. Family reading ritual
+3. Digital library
+
+Digital library is supporting functionality, not the core idea.
+
+## 26.2 Audience
+
+**Primary:** parents, grandparents, family reading
+
+**Secondary:** child self-reading (future growth)
+
+**Age groups:**
+
+| Group | Mode |
+|-------|------|
+| 0–2 | image-first; adult reads |
+| 2–4 | co-reading |
+| 4–6 | independent reading preparation |
+| 6+ | future learning layer |
+
+## 26.3 Anti-addiction contract
+
+Chytayko **MUST NOT USE:**
+
+- endless scroll
+- autoplay
+- streaks
+- XP
+- daily rewards
+- loot mechanics
+- FOMO
+- return timers
+- push “come back”
+- ads for children
+- aggressive animation
+- overstimulation
+- multi-focus screens
+
+**Rule:** one primary focus per screen.
+
+## 26.4 Reading rituals
+
+Supported ritual modes:
+
+- 🌙 Night reading
+- ☀ Day reading
+- 📖 Quiet time
+- 🎉 Weekend reading
+- 🚗 Travel reading
+
+**Night mode:** warmer palette, fewer details, calmer rhythm
+
+**Day mode:** lighter palette, more exploration, still low stimulation
+
+## 26.5 Reading philosophy
+
+Application **MUST NOT** replace adults.
+
+**No:** narration, auto-reading, story voice playback, parent replacement
+
+**Main scenario:** adult reads to child
+
+**Secondary scenario:** child reads independently
+
+**Future (not MVP):** hide-illustrations mode, travel reading mode, ambient layer (late phase only)
+
+**Ambient:** optional, disabled by default, background atmosphere only, never story narration
+
+## 26.6 Illustration philosophy
+
+Tablet and phone layouts are different. **Do not** scale tablet composition to phone.
+
+| Device | Priority |
+|--------|----------|
+| Phone | text |
+| Tablet | illustration |
+
+**Illustration layers:** A hero · B context · C details
+
+| Device | Layers |
+|--------|--------|
+| Phone | A + limited B |
+| Tablet | A + B + C |
+
+**Support:** illustration-hidden mode, text-only reading
+
+## 26.7 Brand character — Teri
+
+**Name:** Teri
+
+**Concept:** book creature inspired by a Boxer dog
+
+**Role:** library guardian, quiet companion
+
+**Constraints:** appears rarely; helps orientation; not a main hero; not a reward system; not gamification; does not replace parents
+
+## 26.8 Product boundaries
+
+- Digital only — no print roadmap
+- Stories and illustrations belong to the **content phase** and remain **unfrozen** until that phase
+- No global illustration freeze before the content phase
+- Visual execution: `DESIGN_CODE.md`; store strings: §16
 
 ---
 

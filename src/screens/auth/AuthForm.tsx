@@ -22,6 +22,7 @@ type AuthFormProps = {
   submitLabel: string;
   onSubmit: (email: string, password: string) => Promise<AuthResult<AuthUser>>;
   onSuccess: () => void;
+  onReadWithoutAccount: () => void;
   alternateAction?: AuthAlternateAction;
 };
 
@@ -30,6 +31,7 @@ export function AuthForm({
   submitLabel,
   onSubmit,
   onSuccess,
+  onReadWithoutAccount,
   alternateAction,
 }: AuthFormProps) {
   const { theme } = useAppTheme();
@@ -99,6 +101,14 @@ export function AuthForm({
           style={styles.submit}
         />
 
+        <AppButton
+          label="Читати без акаунта"
+          variant="secondary"
+          onPress={onReadWithoutAccount}
+          disabled={loading}
+          style={styles.readWithoutAccount}
+        />
+
         {alternateAction ? (
           <Pressable
             onPress={alternateAction.onPress}
@@ -136,6 +146,9 @@ function createStyles(theme: AppTheme) {
     },
     submit: {
       marginTop: theme.spacing.space_6,
+    },
+    readWithoutAccount: {
+      marginTop: theme.spacing.space_3,
     },
     alternate: {
       marginTop: theme.spacing.space_4,
