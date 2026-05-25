@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import type { ColorTokens } from '../../../theme/tokens/colors';
+
 const STORAGE_KEY = '@chytaiko/reader-settings';
 
 export type ReadingMode = 'default' | 'night' | 'day' | 'travel' | 'quiet';
@@ -13,7 +15,49 @@ export type ReaderModePresentation = {
   scrollGap: number;
   imageHeightScale: number;
   prioritizeText: boolean;
+  readerBackground: string;
+  imageFrameBackground: string | null;
+  storyTitleColor: 'secondary' | 'muted';
+  containerPaddingTop: number;
+  containerPaddingBottom: number;
+  modeRowPaddingBottom: number;
+  illustrationToggleMarginBottom: number;
+  scrollContentPaddingBottom: number;
+  footerPaddingTop: number;
+  footerGap: number;
+  storyTitleMarginBottom: number;
 };
+
+type ReaderPresentationSpacing = {
+  space_2: number;
+  space_3: number;
+  space_4: number;
+  space_5: number;
+  space_6: number;
+  space_8: number;
+};
+
+function defaultModePresentation(
+  spacing: ReaderPresentationSpacing,
+  colors: ColorTokens,
+): ReaderModePresentation {
+  return {
+    scrollGap: spacing.space_6,
+    imageHeightScale: 1,
+    prioritizeText: false,
+    readerBackground: colors.background,
+    imageFrameBackground: null,
+    storyTitleColor: 'secondary',
+    containerPaddingTop: spacing.space_4,
+    containerPaddingBottom: spacing.space_6,
+    modeRowPaddingBottom: spacing.space_3,
+    illustrationToggleMarginBottom: spacing.space_4,
+    scrollContentPaddingBottom: spacing.space_6,
+    footerPaddingTop: spacing.space_4,
+    footerGap: spacing.space_4,
+    storyTitleMarginBottom: spacing.space_3,
+  };
+}
 
 type ReaderSettingsListener = (settings: ReaderSettings) => void;
 
@@ -108,34 +152,72 @@ async function persistSettings(): Promise<void> {
 }
 
 /**
- * Layout hints per reading mode (spacing only — no theme or sound changes).
+ * Layout and surface hints per reading mode (existing theme tokens only).
  */
 export function getReaderModePresentation(
   mode: ReadingMode,
-  spacing: { space_4: number; space_6: number },
+  spacing: ReaderPresentationSpacing,
+  colors: ColorTokens,
 ): ReaderModePresentation {
+  const base = defaultModePresentation(spacing, colors);
+
   switch (mode) {
     case 'night':
       return {
-        scrollGap: spacing.space_4,
+        ...base,
+        scrollGap: spacing.space_3,
+        imageHeightScale: 0.7,
+        prioritizeText: true,
+        readerBackground: colors.surface,
+        imageFrameBackground: colors.surfaceMuted,
+        storyTitleColor: 'muted',
+        containerPaddingTop: spacing.space_3,
+        containerPaddingBottom: spacing.space_5,
+        modeRowPaddingBottom: spacing.space_2,
+        illustrationToggleMarginBottom: spacing.space_3,
+        scrollContentPaddingBottom: spacing.space_5,
+        footerPaddingTop: spacing.space_3,
+        footerGap: spacing.space_3,
+        storyTitleMarginBottom: spacing.space_2,
+      };
+    case 'day':
+      return {
+        ...base,
+        scrollGap: spacing.space_8,
+        imageHeightScale: 0.95,
+        containerPaddingTop: spacing.space_5,
+        containerPaddingBottom: spacing.space_8,
+        modeRowPaddingBottom: spacing.space_4,
+        illustrationToggleMarginBottom: spacing.space_5,
+        scrollContentPaddingBottom: spacing.space_8,
+      };
+    case 'quiet':
+      return {
+        ...base,
+        scrollGap: spacing.space_5,
         imageHeightScale: 0.85,
-        prioritizeText: false,
+        prioritizeText: true,
+        readerBackground: colors.surface,
+        storyTitleColor: 'muted',
+        containerPaddingTop: spacing.space_3,
+        containerPaddingBottom: spacing.space_5,
+        modeRowPaddingBottom: spacing.space_2,
+        illustrationToggleMarginBottom: spacing.space_3,
+        scrollContentPaddingBottom: spacing.space_5,
+        footerPaddingTop: spacing.space_3,
+        footerGap: spacing.space_3,
+        storyTitleMarginBottom: spacing.space_2,
       };
     case 'travel':
       return {
+        ...base,
         scrollGap: spacing.space_6,
         imageHeightScale: 0.75,
         prioritizeText: true,
       };
-    case 'day':
-    case 'quiet':
     case 'default':
     default:
-      return {
-        scrollGap: spacing.space_6,
-        imageHeightScale: 1,
-        prioritizeText: false,
-      };
+      return base;
   }
 }
 
