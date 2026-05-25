@@ -16,6 +16,7 @@ import {
   isHydrated,
   subscribeHydration,
 } from '../../features/app/services/appHydrationService';
+import { recordLibraryStoryOpen } from '../../features/library';
 import {
   clearReaderSession,
   getProgress,
@@ -187,6 +188,10 @@ function ReaderContent({
     () => subscribeReaderSettings((settings) => setReaderSettings(settings)),
     [],
   );
+
+  useEffect(() => {
+    recordLibraryStoryOpen(storyId, readingMode);
+  }, [storyId, readingMode]);
 
   const modePresentation = useMemo(
     () =>
