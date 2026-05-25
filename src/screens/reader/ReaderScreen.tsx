@@ -190,11 +190,18 @@ function ReaderContent({
 
   const modePresentation = useMemo(
     () =>
-      getReaderModePresentation(readingMode, {
-        space_4: theme.spacing.space_4,
-        space_6: theme.spacing.space_6,
-      }),
-    [readingMode, theme.spacing.space_4, theme.spacing.space_6],
+      getReaderModePresentation(
+        readingMode,
+        {
+          space_2: theme.spacing.space_2,
+          space_3: theme.spacing.space_3,
+          space_4: theme.spacing.space_4,
+          space_5: theme.spacing.space_5,
+          space_6: theme.spacing.space_6,
+        },
+        theme.colors,
+      ),
+    [readingMode, theme.colors, theme.spacing],
   );
 
   const pageImageHeight = Math.round(
@@ -247,18 +254,31 @@ function ReaderContent({
   };
 
   return (
-    <AppScreen padded={false} style={styles.screen}>
+    <AppScreen
+      padded={false}
+      style={[
+        styles.screen,
+        { backgroundColor: modePresentation.readerBackground },
+      ]}
+    >
       <View
         style={[
           styles.container,
-          { paddingHorizontal: readerLayout.contentPadding },
+          {
+            paddingHorizontal: readerLayout.contentPadding,
+            paddingTop: modePresentation.containerPaddingTop,
+            paddingBottom: modePresentation.containerPaddingBottom,
+          },
         ]}
       >
         <AppText
           variant="caption"
-          color="secondary"
+          color={modePresentation.storyTitleColor}
           numberOfLines={1}
-          style={styles.storyTitle}
+          style={[
+            styles.storyTitle,
+            { marginBottom: modePresentation.storyTitleMarginBottom },
+          ]}
         >
           {storyTitle}
         </AppText>
@@ -266,7 +286,10 @@ function ReaderContent({
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.modeRow}
+          contentContainerStyle={[
+            styles.modeRow,
+            { paddingBottom: modePresentation.modeRowPaddingBottom },
+          ]}
         >
           {READER_MODE_OPTIONS.map((option) => (
             <AppChip
@@ -286,24 +309,47 @@ function ReaderContent({
           }
           variant="secondary"
           onPress={handleToggleIllustrations}
-          style={styles.illustrationToggle}
+          style={[
+            styles.illustrationToggle,
+            { marginBottom: modePresentation.illustrationToggleMarginBottom },
+          ]}
         />
 
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { gap: modePresentation.scrollGap },
+            {
+              gap: modePresentation.scrollGap,
+              paddingBottom: modePresentation.scrollContentPaddingBottom,
+            },
           ]}
           showsVerticalScrollIndicator={false}
         >
           {shouldShowIllustrations ? (
-            <AppImage
-              source={pageImage.source}
-              fallbackLabel="Ілюстрація"
-              height={pageImageHeight}
-              collapseWhenUnavailable={pageImage.type === 'missing'}
-              style={[styles.pageImage, { maxHeight: pageImageHeight }]}
-            />
+            modePresentation.imageFrameBackground ? (
+              <View
+                style={[
+                  styles.pageImageFrame,
+                  { backgroundColor: modePresentation.imageFrameBackground },
+                ]}
+              >
+                <AppImage
+                  source={pageImage.source}
+                  fallbackLabel="Ілюстрація"
+                  height={pageImageHeight}
+                  collapseWhenUnavailable={pageImage.type === 'missing'}
+                  style={[styles.pageImage, { maxHeight: pageImageHeight }]}
+                />
+              </View>
+            ) : (
+              <AppImage
+                source={pageImage.source}
+                fallbackLabel="Ілюстрація"
+                height={pageImageHeight}
+                collapseWhenUnavailable={pageImage.type === 'missing'}
+                style={[styles.pageImage, { maxHeight: pageImageHeight }]}
+              />
+            )
           ) : null}
 
           <View
@@ -319,7 +365,15 @@ function ReaderContent({
           </View>
         </ScrollView>
 
-        <View style={styles.footer}>
+        <View
+          style={[
+            styles.footer,
+            {
+              paddingTop: modePresentation.footerPaddingTop,
+              gap: modePresentation.footerGap,
+            },
+          ]}
+        >
           <View style={styles.progressBlock}>
             <AppProgress
               variant="dots"
@@ -406,27 +460,26 @@ function ReaderCompletedView({
 function createStyles(theme: AppTheme) {
   return StyleSheet.create({
     screen: {
-      backgroundColor: theme.colors.background,
+      flex: 1,
     },
     container: {
       flex: 1,
-      paddingTop: theme.spacing.space_4,
-      paddingBottom: theme.spacing.space_6,
     },
     storyTitle: {
       textAlign: 'center',
-      marginBottom: theme.spacing.space_3,
     },
     modeRow: {
       gap: theme.spacing.space_2,
-      paddingBottom: theme.spacing.space_3,
     },
-    illustrationToggle: {
-      marginBottom: theme.spacing.space_4,
-    },
+    illustrationToggle: {},
     scrollContent: {
       flexGrow: 1,
-      paddingBottom: theme.spacing.space_6,
+    },
+    pageImageFrame: {
+      width: '92%',
+      alignSelf: 'center',
+      padding: theme.spacing.space_2,
+      borderRadius: theme.radius.radius_lg,
     },
     pageImage: {
       width: '100%',
@@ -444,10 +497,7 @@ function createStyles(theme: AppTheme) {
       width: '100%',
       textAlign: 'left',
     },
-    footer: {
-      gap: theme.spacing.space_4,
-      paddingTop: theme.spacing.space_4,
-    },
+    footer: {},
     progressBlock: {
       alignItems: 'center',
       gap: theme.spacing.space_3,
