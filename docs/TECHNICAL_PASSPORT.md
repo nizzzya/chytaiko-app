@@ -1151,17 +1151,26 @@ Chytayko **MUST NOT USE:**
 
 ## 26.4 Reading rituals
 
-Supported ritual modes:
+Reader `readingMode` (persisted with `showIllustrations`):
 
-- 🌙 Night reading
-- ☀ Day reading
-- 📖 Quiet time
-- 🎉 Weekend reading
-- 🚗 Travel reading
+| Mode | Status |
+|------|--------|
+| Default | Implemented |
+| Night | Implemented |
+| Day | Implemented |
+| Quiet time | Implemented |
+| Travel | Implemented (text-first) |
+| Weekend | Future |
 
-**Night mode:** warmer palette, fewer details, calmer rhythm
+**Night:** Reader ritual only — does **not** switch app-wide dark theme (Night Story). MVP uses calmer spacing, reduced visual density, and existing tokens (`surface`, `surfaceMuted`). Warmer dedicated palette is future polish.
 
-**Day mode:** lighter palette, more exploration, still low stimulation
+**Day:** More open spacing; low stimulation (no extra chrome or decoration in MVP).
+
+**Quiet:** Calmer than default; text-first bias; illustrations still allowed.
+
+**Travel:** Text-first. Illustrations may hide on first entry; user can turn them back on. When shown, images stay smaller than default.
+
+**Weekend reading:** Not in app yet — future ritual.
 
 ## 26.5 Reading philosophy
 
@@ -1173,7 +1182,9 @@ Application **MUST NOT** replace adults.
 
 **Secondary scenario:** child reads independently
 
-**Future (not MVP):** hide-illustrations mode, travel reading mode, ambient layer (late phase only)
+**Reader settings (MVP):** `showIllustrations` toggle — persisted; works in all modes. Travel may default illustrations off once per entry; user override is kept.
+
+**Future (not MVP):** ambient layer (late phase only)
 
 **Ambient:** optional, disabled by default, background atmosphere only, never story narration
 
@@ -1193,7 +1204,7 @@ Tablet and phone layouts are different. **Do not** scale tablet composition to p
 | Phone | A + limited B |
 | Tablet | A + B + C |
 
-**Support:** illustration-hidden mode, text-only reading
+**Support:** `showIllustrations` Reader setting — off yields text-only layout; on in any ritual mode
 
 ## 26.7 Brand character — Teri
 
