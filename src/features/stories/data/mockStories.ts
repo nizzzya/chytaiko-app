@@ -20,6 +20,10 @@ export const mockStories: Story[] = [
     status: 'active',
     createdAt: MOCK_TIMESTAMP,
     updatedAt: MOCK_TIMESTAMP,
+    recommendedRitual: 'day',
+    estimatedReadingMinutes: 4,
+    illustrationProfile: 'standard',
+    readingModes: ['day', 'readTogether'],
   },
   {
     id: 'story_lisychka',
@@ -34,6 +38,10 @@ export const mockStories: Story[] = [
     status: 'active',
     createdAt: MOCK_TIMESTAMP,
     updatedAt: MOCK_TIMESTAMP,
+    recommendedRitual: 'readTogether',
+    estimatedReadingMinutes: 5,
+    illustrationProfile: 'rich',
+    readingModes: ['readTogether', 'quiet'],
   },
   {
     id: 'story_koza',
@@ -48,6 +56,10 @@ export const mockStories: Story[] = [
     status: 'active',
     createdAt: MOCK_TIMESTAMP,
     updatedAt: MOCK_TIMESTAMP,
+    recommendedRitual: 'night',
+    estimatedReadingMinutes: 4,
+    illustrationProfile: 'minimal',
+    readingModes: ['night', 'quiet'],
   },
 ];
 
@@ -59,6 +71,8 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Жили-були дід та баба. Одного разу баба спекла колобка — рум’яного та пахучого.',
     imageUrl: storyAsset('kolobok', 'page-001.webp'),
     createdAt: MOCK_TIMESTAMP,
+    textOnlySafe: true,
+    imageAlt: 'Дід і баба біля печі, на столі рум’яний колобок',
   },
   {
     id: 'story_kolobok_page_2',
@@ -67,6 +81,7 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Колобок покотився з порога і пішов по стежці, співаючи веселу пісеньку.',
     imageUrl: storyAsset('kolobok', 'page-002.webp'),
     createdAt: MOCK_TIMESTAMP,
+    imageAlt: 'Колобок котиться стежкою лісом',
   },
   {
     id: 'story_kolobok_page_3',
@@ -75,6 +90,7 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Дорогою він зустрічав звірів, але завжди залишався спритним і уважним.',
     imageUrl: storyAsset('kolobok', 'page-003.webp'),
     createdAt: MOCK_TIMESTAMP,
+    imageAlt: 'Колобок зустрічає лісових звірів на стежці',
   },
   {
     id: 'story_lisychka_page_1',
@@ -83,6 +99,7 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Лисичка запросила журавля у гості на обід. Вона приготувала кашу в глибокій мискі.',
     imageUrl: storyAsset('fox-crane', 'page-001.webp'),
     createdAt: MOCK_TIMESTAMP,
+    imageAlt: 'Лисичка та журавель біля глибокої миски з кашею',
   },
   {
     id: 'story_lisychka_page_2',
@@ -91,6 +108,8 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Журавель не зміг їсти з миски, а лисичка швидко з’їла все сама.',
     imageUrl: storyAsset('fox-crane', 'page-002.webp'),
     createdAt: MOCK_TIMESTAMP,
+    textOnlySafe: true,
+    imageAlt: 'Журавель дивиться на миску, лисичка їсть кашу',
   },
   {
     id: 'story_lisychka_page_3',
@@ -99,6 +118,7 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Потім журавель запросив лисичку і подав їжу в високому глечику — так вони зрозуміли одне одного.',
     imageUrl: storyAsset('fox-crane', 'page-003.webp'),
     createdAt: MOCK_TIMESTAMP,
+    imageAlt: 'Лисичка та журавель поруч із високим глечиком',
   },
   {
     id: 'story_koza_page_1',
@@ -107,6 +127,7 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Коза-дереза жила в лісі і любила спокійні вечори біля струмка.',
     imageUrl: storyAsset('koza-dereza', 'page-001.webp'),
     createdAt: MOCK_TIMESTAMP,
+    imageAlt: 'Коза-дереза спокійно сидить біля лісового струмка',
   },
   {
     id: 'story_koza_page_2',
@@ -115,6 +136,7 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Одного дня вона допомогла звірятам перейти через гірський струмок.',
     imageUrl: storyAsset('koza-dereza', 'page-002.webp'),
     createdAt: MOCK_TIMESTAMP,
+    imageAlt: 'Коза допомагає звірятам перейти струмок',
   },
   {
     id: 'story_koza_page_3',
@@ -123,5 +145,7 @@ export const mockStoryPages: StoryPage[] = [
     text: 'Усі подякували козі, і вона повернулася додому — спокійна та щаслива.',
     imageUrl: storyAsset('koza-dereza', 'page-003.webp'),
     createdAt: MOCK_TIMESTAMP,
+    textOnlySafe: true,
+    imageAlt: 'Коза повертається додому в спокійний вечір',
   },
 ];
