@@ -34,6 +34,7 @@ type ReaderPresentationSpacing = {
   space_4: number;
   space_5: number;
   space_6: number;
+  space_8: number;
 };
 
 function defaultModePresentation(
@@ -179,6 +180,34 @@ export function getReaderModePresentation(
         footerGap: spacing.space_3,
         storyTitleMarginBottom: spacing.space_2,
       };
+    case 'day':
+      return {
+        ...base,
+        scrollGap: spacing.space_8,
+        imageHeightScale: 0.95,
+        containerPaddingTop: spacing.space_5,
+        containerPaddingBottom: spacing.space_8,
+        modeRowPaddingBottom: spacing.space_4,
+        illustrationToggleMarginBottom: spacing.space_5,
+        scrollContentPaddingBottom: spacing.space_8,
+      };
+    case 'quiet':
+      return {
+        ...base,
+        scrollGap: spacing.space_5,
+        imageHeightScale: 0.85,
+        prioritizeText: true,
+        readerBackground: colors.surface,
+        storyTitleColor: 'muted',
+        containerPaddingTop: spacing.space_3,
+        containerPaddingBottom: spacing.space_5,
+        modeRowPaddingBottom: spacing.space_2,
+        illustrationToggleMarginBottom: spacing.space_3,
+        scrollContentPaddingBottom: spacing.space_5,
+        footerPaddingTop: spacing.space_3,
+        footerGap: spacing.space_3,
+        storyTitleMarginBottom: spacing.space_2,
+      };
     case 'travel':
       return {
         ...base,
@@ -186,8 +215,6 @@ export function getReaderModePresentation(
         imageHeightScale: 0.75,
         prioritizeText: true,
       };
-    case 'day':
-    case 'quiet':
     case 'default':
     default:
       return base;

@@ -198,6 +198,7 @@ function ReaderContent({
           space_4: theme.spacing.space_4,
           space_5: theme.spacing.space_5,
           space_6: theme.spacing.space_6,
+          space_8: theme.spacing.space_8,
         },
         theme.colors,
       ),
