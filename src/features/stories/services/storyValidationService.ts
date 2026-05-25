@@ -207,3 +207,31 @@ export function validateStoryPages(storyPages: StoryPage[]): StoryValidationResu
 
   return { valid, warnings };
 }
+
+export function validateStoryWithPages(
+  story: Story,
+  pages: StoryPage[],
+): StoryValidationResult {
+  const storyResult = validateStory(story);
+  const pagesResult = validateStoryPages(pages);
+  const warnings = [...storyResult.warnings, ...pagesResult.warnings];
+
+  if (typeof story.pageCount === 'number' && pages.length !== story.pageCount) {
+    warnings.push(
+      `story.pageCount (${story.pageCount}) does not match pages.length (${pages.length}).`,
+    );
+  }
+
+  for (const page of pages) {
+    if (page.storyId !== story.id) {
+      warnings.push(
+        `Page ${page.pageNumber}: storyId "${page.storyId}" does not match story.id "${story.id}".`,
+      );
+    }
+  }
+
+  return {
+    valid: storyResult.valid && pagesResult.valid,
+    warnings,
+  };
+}
