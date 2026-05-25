@@ -4,6 +4,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   AppButton,
+  AppChip,
   AppErrorState,
   AppImage,
   AppLoadingState,
@@ -18,9 +19,16 @@ import {
 import {
   clearReaderSession,
   getProgress,
+  getReaderModePresentation,
+  getReaderSettings,
   markCompleted,
+  READER_MODE_OPTIONS,
   saveProgress,
   saveReaderSession,
+  saveReaderSettings,
+  subscribeReaderSettings,
+  useReaderLayout,
+  type ReadingMode,
 } from '../../features/reader';
 import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
 import {
@@ -164,12 +172,55 @@ function ReaderContent({
   onComplete,
   onBackToStory,
 }: ReaderContentProps) {
+  const { theme } = useAppTheme();
+  const readerLayout = useReaderLayout();
+  const [readerSettings, setReaderSettings] = useState(getReaderSettings);
+  const { showIllustrations, readingMode } = readerSettings;
   const page =
     pages.find((item) => item.pageNumber === currentPage) ?? pages[0];
   const pageIndex = page.pageNumber;
   const isFirstPage = pageIndex <= 1;
   const isLastPage = pageIndex >= pages.length;
   const pageImage = useStoryImageSource(page.imageUrl);
+
+  useEffect(
+    () => subscribeReaderSettings((settings) => setReaderSettings(settings)),
+    [],
+  );
+
+  const modePresentation = useMemo(
+    () =>
+      getReaderModePresentation(readingMode, {
+        space_4: theme.spacing.space_4,
+        space_6: theme.spacing.space_6,
+      }),
+    [readingMode, theme.spacing.space_4, theme.spacing.space_6],
+  );
+
+  const pageImageHeight = Math.round(
+    readerLayout.imageHeight * modePresentation.imageHeightScale,
+  );
+
+  const shouldShowIllustrations = showIllustrations;
+
+  const shouldPrioritizeText =
+    !readerLayout.isTablet ||
+    !shouldShowIllustrations ||
+    modePresentation.prioritizeText;
+
+  const handleToggleIllustrations = () => {
+    saveReaderSettings({
+      ...getReaderSettings(),
+      showIllustrations: !showIllustrations,
+    });
+  };
+
+  const handleSelectReadingMode = (mode: ReadingMode) => {
+    saveReaderSettings({
+      ...getReaderSettings(),
+      readingMode: mode,
+    });
+  };
 
   const goToPage = (nextPage: number) => {
     const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
@@ -197,7 +248,12 @@ function ReaderContent({
 
   return (
     <AppScreen padded={false} style={styles.screen}>
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { paddingHorizontal: readerLayout.contentPadding },
+        ]}
+      >
         <AppText
           variant="caption"
           color="secondary"
@@ -208,20 +264,59 @@ function ReaderContent({
         </AppText>
 
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.modeRow}
+        >
+          {READER_MODE_OPTIONS.map((option) => (
+            <AppChip
+              key={option.mode}
+              label={option.label}
+              selected={readingMode === option.mode}
+              onPress={() => handleSelectReadingMode(option.mode)}
+            />
+          ))}
+        </ScrollView>
+
+        <AppButton
+          label={
+            shouldShowIllustrations
+              ? 'Сховати ілюстрації'
+              : 'Показувати ілюстрації'
+          }
+          variant="secondary"
+          onPress={handleToggleIllustrations}
+          style={styles.illustrationToggle}
+        />
+
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { gap: modePresentation.scrollGap },
+          ]}
           showsVerticalScrollIndicator={false}
         >
-          <AppImage
-            source={pageImage.source}
-            fallbackLabel="Ілюстрація"
-            height={180}
-            collapseWhenUnavailable={pageImage.type === 'missing'}
-            style={styles.pageImage}
-          />
+          {shouldShowIllustrations ? (
+            <AppImage
+              source={pageImage.source}
+              fallbackLabel="Ілюстрація"
+              height={pageImageHeight}
+              collapseWhenUnavailable={pageImage.type === 'missing'}
+              style={[styles.pageImage, { maxHeight: pageImageHeight }]}
+            />
+          ) : null}
 
-          <AppText variant="reader" style={styles.pageText}>
-            {page.text}
-          </AppText>
+          <View
+            style={[
+              styles.textBlock,
+              shouldPrioritizeText && styles.textBlockPhone,
+              { maxWidth: readerLayout.textMaxWidth },
+            ]}
+          >
+            <AppText variant="reader" style={styles.pageText}>
+              {page.text}
+            </AppText>
+          </View>
         </ScrollView>
 
         <View style={styles.footer}>
@@ -274,9 +369,16 @@ function ReaderCompletedView({
   styles,
   onBackToStory,
 }: ReaderCompletedViewProps) {
+  const readerLayout = useReaderLayout();
+
   return (
     <AppScreen padded={false} style={styles.screen}>
-      <View style={styles.completedContainer}>
+      <View
+        style={[
+          styles.completedContainer,
+          { paddingHorizontal: readerLayout.contentPadding },
+        ]}
+      >
         <AppText
           variant="caption"
           color="secondary"
@@ -308,25 +410,39 @@ function createStyles(theme: AppTheme) {
     },
     container: {
       flex: 1,
-      paddingHorizontal: theme.layout.readerHorizontalPadding,
       paddingTop: theme.spacing.space_4,
       paddingBottom: theme.spacing.space_6,
     },
     storyTitle: {
       textAlign: 'center',
+      marginBottom: theme.spacing.space_3,
+    },
+    modeRow: {
+      gap: theme.spacing.space_2,
+      paddingBottom: theme.spacing.space_3,
+    },
+    illustrationToggle: {
       marginBottom: theme.spacing.space_4,
     },
     scrollContent: {
       flexGrow: 1,
       paddingBottom: theme.spacing.space_6,
-      gap: theme.spacing.space_6,
     },
     pageImage: {
-      maxHeight: 220,
+      width: '100%',
       borderRadius: theme.radius.radius_lg,
+    },
+    textBlock: {
+      width: '100%',
+      alignSelf: 'center',
+    },
+    textBlockPhone: {
+      flexGrow: 1,
     },
     pageText: {
       color: theme.colors.textPrimary,
+      width: '100%',
+      textAlign: 'left',
     },
     footer: {
       gap: theme.spacing.space_4,
@@ -348,7 +464,6 @@ function createStyles(theme: AppTheme) {
     },
     completedContainer: {
       flex: 1,
-      paddingHorizontal: theme.layout.readerHorizontalPadding,
       paddingVertical: theme.layout.readerVerticalPadding,
       justifyContent: 'space-between',
     },
