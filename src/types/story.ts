@@ -10,6 +10,16 @@ export type StoryCategory =
   | 'animals'
   | 'nature';
 
+/** Ritual modes supported for demo/catalog metadata (Reader `readingMode` uses a parallel set). */
+export type StoryRitualMode =
+  | 'night'
+  | 'day'
+  | 'quiet'
+  | 'travel'
+  | 'readTogether';
+
+export type StoryIllustrationProfile = 'minimal' | 'standard' | 'rich';
+
 export type Story = {
   id: string;
   slug: string;
@@ -22,6 +32,12 @@ export type Story = {
   status: StoryStatus;
   createdAt: string;
   updatedAt: string;
+  /** Suggested rituals for this story (demo content). */
+  readingModes?: StoryRitualMode[];
+  contentWarnings?: string[];
+  estimatedReadingMinutes?: number;
+  recommendedRitual?: StoryRitualMode;
+  illustrationProfile?: StoryIllustrationProfile;
 };
 
 export type StoryPage = {
@@ -31,4 +47,8 @@ export type StoryPage = {
   text: string;
   imageUrl: string | null;
   createdAt: string;
+  imageAlt?: string;
+  phoneImageUrl?: string;
+  tabletImageUrl?: string;
+  textOnlySafe?: boolean;
 };
