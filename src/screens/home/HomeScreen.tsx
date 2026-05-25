@@ -125,6 +125,11 @@ export function HomeScreen({ navigation }: Props) {
           </View>
           <View style={styles.headerActions}>
             <AppIconButton
+              accessibilityLabel="Моя бібліотека"
+              label="Б"
+              onPress={() => navigation.navigate('Library')}
+            />
+            <AppIconButton
               accessibilityLabel="Обране"
               label="♥"
               onPress={() => navigation.navigate('Favorites')}

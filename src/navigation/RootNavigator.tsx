@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAppTheme } from '../theme';
 import { FavoritesScreen } from '../screens/favorites/FavoritesScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
+import { LibraryScreen } from '../screens/library/LibraryScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../screens/onboarding/OnboardingScreen';
 import { ProfileScreen } from '../screens/profile/ProfileScreen';
@@ -75,6 +76,11 @@ export function RootNavigator() {
       <Stack.Screen
         name="Favorites"
         component={FavoritesScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Library"
+        component={LibraryScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
