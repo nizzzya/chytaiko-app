@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { useNetworkStatus } from '../../features/app/hooks/useNetworkStatus';
@@ -14,7 +14,6 @@ import {
   AppCard,
   AppChip,
   AppEmptyState,
-  AppIconButton,
   AppImage,
   AppLoadingState,
   AppScreen,
@@ -124,19 +123,16 @@ export function HomeScreen({ navigation }: Props) {
             </AppText>
           </View>
           <View style={styles.headerActions}>
-            <AppIconButton
-              accessibilityLabel="Моя бібліотека"
-              label="Б"
+            <HeaderActionButton
+              label="Бібліотека"
               onPress={() => navigation.navigate('Library')}
             />
-            <AppIconButton
-              accessibilityLabel="Обране"
-              label="♥"
+            <HeaderActionButton
+              label="Обране"
               onPress={() => navigation.navigate('Favorites')}
             />
-            <AppIconButton
-              accessibilityLabel="Профіль"
-              label="П"
+            <HeaderActionButton
+              label="Профіль"
               onPress={() => navigation.navigate('Profile')}
             />
           </View>
@@ -159,13 +155,14 @@ export function HomeScreen({ navigation }: Props) {
 
         {continueReading ? (
           <AppCard
+            style={styles.continueCard}
             onPress={() =>
               navigation.navigate('Reader', {
                 storyId: continueReading.story.id,
               })
             }
           >
-            <AppText variant="h3">Продовжити читання</AppText>
+            <AppText variant="h3">Повернемось до казки?</AppText>
             <AppText
               variant="body"
               color="secondary"
@@ -223,26 +220,60 @@ function StoryCatalogCard({ story, styles, onPress }: StoryCatalogCardProps) {
   const coverImage = useStoryImageSource(story.coverImage);
 
   return (
-    <AppCard onPress={onPress}>
+    <AppCard onPress={onPress} style={styles.storyCard}>
       <AppImage
         source={coverImage.source}
         fallbackLabel="Обкладинка"
-        height={72}
+        height={56}
         style={styles.cardCover}
       />
       <AppText variant="h3">{story.title}</AppText>
       <AppText
-        variant="body"
+        variant="caption"
         color="secondary"
         numberOfLines={2}
         style={styles.cardDescription}
       >
         {story.description}
       </AppText>
-      <AppText variant="caption" color="muted" style={styles.cardMeta}>
+      <AppText variant="caption" color="muted" style={[styles.cardMeta, styles.cardMetaSoft]}>
         {story.ageGroup} · {categoryLabel} · {story.pageCount} стор.
       </AppText>
     </AppCard>
+  );
+}
+
+type HeaderActionButtonProps = {
+  label: string;
+  onPress: () => void;
+};
+
+function HeaderActionButton({ label, onPress }: HeaderActionButtonProps) {
+  const { theme } = useAppTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        button: {
+          paddingVertical: theme.spacing.space_2,
+          paddingHorizontal: theme.spacing.space_3,
+          borderRadius: theme.radius.radius_md,
+          backgroundColor: theme.colors.surface,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+        },
+        pressed: {
+          opacity: theme.opacity.pressed,
+        },
+      }),
+    [theme],
+  );
+
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+      <AppText variant="caption" color="secondary">
+        {label}
+      </AppText>
+    </Pressable>
   );
 }
 
@@ -258,37 +289,51 @@ function createStyles(theme: AppTheme) {
       flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
-      gap: theme.spacing.space_3,
+      gap: theme.spacing.space_4,
     },
     header: {
       flex: 1,
       gap: theme.spacing.space_2,
     },
     headerActions: {
-      flexDirection: 'row',
-      gap: theme.spacing.space_1,
+      gap: theme.spacing.space_2,
+      alignItems: 'flex-end',
     },
     chipRow: {
       gap: theme.spacing.space_2,
       paddingRight: theme.layout.screenPadding,
+      opacity: 0.88,
+    },
+    continueCard: {
+      backgroundColor: theme.colors.surfaceMuted,
+      ...theme.shadows.shadow_none,
     },
     continueTitle: {
-      marginTop: theme.spacing.space_2,
+      marginTop: theme.spacing.space_3,
     },
     offlineNote: {
       marginTop: theme.spacing.space_1,
     },
     catalog: {
-      gap: theme.layout.cardGap,
+      gap: theme.spacing.space_3,
+    },
+    storyCard: {
+      backgroundColor: theme.colors.surfaceMuted,
+      ...theme.shadows.shadow_none,
     },
     cardCover: {
-      marginBottom: theme.spacing.space_3,
+      marginBottom: theme.spacing.space_2,
+      width: '92%',
+      alignSelf: 'center',
     },
     cardDescription: {
-      marginTop: theme.spacing.space_3,
+      marginTop: theme.spacing.space_2,
     },
     cardMeta: {
-      marginTop: theme.spacing.space_3,
+      marginTop: theme.spacing.space_2,
+    },
+    cardMetaSoft: {
+      opacity: 0.8,
     },
   });
 }
