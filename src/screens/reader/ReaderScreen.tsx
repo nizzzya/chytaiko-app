@@ -7,7 +7,6 @@ import {
   AppErrorState,
   AppImage,
   AppLoadingState,
-  AppProgress,
   AppScreen,
   AppText,
 } from '../../components/ui';
@@ -50,7 +49,6 @@ export function ReaderScreen({ navigation, route }: Props) {
   const pages = getStoryPages(storyId);
   const [hydrationReady, setHydrationReady] = useState(isHydrated());
   const [progressInitialized, setProgressInitialized] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => subscribeHydration(() => setHydrationReady(true)), []);
@@ -59,7 +57,6 @@ export function ReaderScreen({ navigation, route }: Props) {
     const result = getProgress(storyId);
 
     if (!result.success || !result.data) {
-      setCurrentPage(1);
       setIsCompleted(false);
       saveReaderSession(storyId, 1);
       return;
@@ -70,7 +67,6 @@ export function ReaderScreen({ navigation, route }: Props) {
       Math.max(pages.length, 1),
     );
 
-    setCurrentPage(lastPage);
     setIsCompleted(result.data.completed);
     saveReaderSession(storyId, lastPage);
   }, [storyId, pages.length]);
@@ -122,30 +118,14 @@ export function ReaderScreen({ navigation, route }: Props) {
     );
   }
 
-  if (isCompleted) {
-    return (
-      <ReaderCompletedView
-        storyTitle={story.title}
-        styles={styles}
-        onBackToStory={goToStoryDetails}
-      />
-    );
-  }
-
   return (
     <ReaderContent
       storyTitle={story.title}
       storyId={storyId}
       pages={pages}
-      currentPage={currentPage}
+      isCompleted={isCompleted}
       styles={styles}
-      onPageChange={setCurrentPage}
-      onComplete={() => {
-        saveProgress(storyId, pages.length);
-        markCompleted(storyId);
-        clearReaderSession();
-        setIsCompleted(true);
-      }}
+      onMarkCompleted={() => setIsCompleted(true)}
       onBackToStory={goToStoryDetails}
     />
   );
@@ -155,10 +135,9 @@ type ReaderContentProps = {
   storyTitle: string;
   storyId: string;
   pages: StoryPage[];
-  currentPage: number;
+  isCompleted: boolean;
   styles: ReturnType<typeof createStyles>;
-  onPageChange: (page: number) => void;
-  onComplete: () => void;
+  onMarkCompleted: () => void;
   onBackToStory: () => void;
 };
 
@@ -166,10 +145,9 @@ function ReaderContent({
   storyTitle,
   storyId,
   pages,
-  currentPage,
+  isCompleted,
   styles,
-  onPageChange,
-  onComplete,
+  onMarkCompleted,
   onBackToStory,
 }: ReaderContentProps) {
   const { theme } = useAppTheme();
@@ -177,12 +155,6 @@ function ReaderContent({
   const [readerSettings, setReaderSettings] = useState(getReaderSettings);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { showIllustrations, readingMode } = readerSettings;
-  const page =
-    pages.find((item) => item.pageNumber === currentPage) ?? pages[0];
-  const pageIndex = page.pageNumber;
-  const isFirstPage = pageIndex <= 1;
-  const isLastPage = pageIndex >= pages.length;
-  const pageImage = useStoryImageSource(page.imageUrl);
 
   useEffect(
     () => subscribeReaderSettings((settings) => setReaderSettings(settings)),
@@ -235,28 +207,15 @@ function ReaderContent({
     });
   };
 
-  const goToPage = (nextPage: number) => {
-    const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
-    onPageChange(clampedPage);
-    saveProgress(storyId, clampedPage);
-    saveReaderSession(storyId, clampedPage);
-  };
-
-  const handlePrevious = () => {
-    if (isFirstPage) {
-      return;
+  const handleReturnToStory = () => {
+    if (!isCompleted) {
+      saveProgress(storyId, pages.length);
+      markCompleted(storyId);
+      clearReaderSession();
+      onMarkCompleted();
     }
 
-    goToPage(pageIndex - 1);
-  };
-
-  const handleNext = () => {
-    if (isLastPage) {
-      onComplete();
-      return;
-    }
-
-    goToPage(pageIndex + 1);
+    onBackToStory();
   };
 
   return (
@@ -313,92 +272,33 @@ function ReaderContent({
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {shouldShowIllustrations ? (
-            modePresentation.imageFrameBackground ? (
-              <View
-                style={[
-                  styles.pageImageFrame,
-                  { backgroundColor: modePresentation.imageFrameBackground },
-                ]}
-              >
-                <AppImage
-                  source={pageImage.source}
-                  fallbackLabel="Ілюстрація"
-                  height={pageImageHeight}
-                  collapseWhenUnavailable={pageImage.type === 'missing'}
-                  style={[styles.pageImage, { maxHeight: pageImageHeight }]}
-                />
-              </View>
-            ) : (
-              <AppImage
-                source={pageImage.source}
-                fallbackLabel="Ілюстрація"
-                height={pageImageHeight}
-                collapseWhenUnavailable={pageImage.type === 'missing'}
-                style={[styles.pageImage, { maxHeight: pageImageHeight }]}
-              />
-            )
-          ) : null}
+          {pages.map((page) => (
+            <ReaderFlowSection
+              key={page.id}
+              page={page}
+              pageImageHeight={pageImageHeight}
+              shouldShowIllustrations={shouldShowIllustrations}
+              shouldPrioritizeText={shouldPrioritizeText}
+              imageFrameBackground={modePresentation.imageFrameBackground}
+              textMaxWidth={readerLayout.textMaxWidth}
+              styles={styles}
+            />
+          ))}
 
-          <View
-            style={[
-              styles.textBlock,
-              shouldPrioritizeText && styles.textBlockPhone,
-              { maxWidth: readerLayout.textMaxWidth },
-            ]}
-          >
-            <AppText variant="reader" style={styles.pageText}>
-              {page.text}
+          <View style={styles.completionSection}>
+            <AppText variant="body" color="secondary" style={styles.completionNote}>
+              {isCompleted ? 'Казку прочитано.' : 'Дякуємо за спокійне читання разом.'}
             </AppText>
+            <AppButton
+              label="Повернутись до казки"
+              variant="secondary"
+              onPress={handleReturnToStory}
+              style={styles.backToStoryButton}
+            />
           </View>
         </ScrollView>
-
-        <View
-          style={[
-            styles.footer,
-            {
-              paddingTop: modePresentation.footerPaddingTop,
-              gap: modePresentation.footerGap,
-            },
-          ]}
-        >
-          <View style={[styles.progressBlock, styles.progressBlockSoft]}>
-            <View style={styles.progressScale}>
-              <AppProgress
-                variant="dots"
-                total={pages.length}
-                current={pageIndex}
-              />
-            </View>
-            <AppText variant="caption" color="muted" style={styles.progressText}>
-              Сторінка {pageIndex} з {pages.length}
-            </AppText>
-          </View>
-
-          <View style={styles.controlsRow}>
-            <AppButton
-              label="Назад"
-              variant="secondary"
-              disabled={isFirstPage}
-              onPress={handlePrevious}
-              style={[styles.controlButton, styles.softControlButton]}
-            />
-            <AppButton
-              label={isLastPage ? 'Завершити' : 'Далі'}
-              variant="secondary"
-              onPress={handleNext}
-              style={[styles.controlButton, styles.softControlButton]}
-            />
-          </View>
-
-          <AppButton
-            label="До казки"
-            variant="secondary"
-            onPress={onBackToStory}
-            style={styles.backToStoryButton}
-          />
-        </View>
       </View>
+
       <Modal
         visible={isSettingsOpen}
         animationType="fade"
@@ -444,6 +344,7 @@ function ReaderContent({
                 );
               })}
             </View>
+
             <Pressable
               style={({ pressed }) => [
                 styles.settingsItem,
@@ -458,6 +359,7 @@ function ReaderContent({
                 {showIllustrations ? 'Увімкнено' : 'Вимкнено'}
               </AppText>
             </Pressable>
+
             <AppButton
               label="Закрити"
               variant="secondary"
@@ -471,48 +373,68 @@ function ReaderContent({
   );
 }
 
-type ReaderCompletedViewProps = {
-  storyTitle: string;
+type ReaderFlowSectionProps = {
+  page: StoryPage;
+  pageImageHeight: number;
+  shouldShowIllustrations: boolean;
+  shouldPrioritizeText: boolean;
+  imageFrameBackground: string | null;
+  textMaxWidth: number;
   styles: ReturnType<typeof createStyles>;
-  onBackToStory: () => void;
 };
 
-function ReaderCompletedView({
-  storyTitle,
+function ReaderFlowSection({
+  page,
+  pageImageHeight,
+  shouldShowIllustrations,
+  shouldPrioritizeText,
+  imageFrameBackground,
+  textMaxWidth,
   styles,
-  onBackToStory,
-}: ReaderCompletedViewProps) {
-  const readerLayout = useReaderLayout();
+}: ReaderFlowSectionProps) {
+  const pageImage = useStoryImageSource(page.imageUrl);
 
   return (
-    <AppScreen padded={false} style={styles.screen}>
+    <View style={styles.flowSection}>
+      {shouldShowIllustrations ? (
+        imageFrameBackground ? (
+          <View
+            style={[
+              styles.pageImageFrame,
+              { backgroundColor: imageFrameBackground },
+            ]}
+          >
+            <AppImage
+              source={pageImage.source}
+              fallbackLabel="Ілюстрація"
+              height={pageImageHeight}
+              collapseWhenUnavailable={pageImage.type === 'missing'}
+              style={[styles.pageImage, { maxHeight: pageImageHeight }]}
+            />
+          </View>
+        ) : (
+          <AppImage
+            source={pageImage.source}
+            fallbackLabel="Ілюстрація"
+            height={pageImageHeight}
+            collapseWhenUnavailable={pageImage.type === 'missing'}
+            style={[styles.pageImage, { maxHeight: pageImageHeight }]}
+          />
+        )
+      ) : null}
+
       <View
         style={[
-          styles.completedContainer,
-          { paddingHorizontal: readerLayout.contentPadding },
+          styles.textBlock,
+          shouldPrioritizeText && styles.textBlockPhone,
+          { maxWidth: textMaxWidth },
         ]}
       >
-        <AppText
-          variant="caption"
-          color="secondary"
-          numberOfLines={1}
-          style={styles.storyTitle}
-        >
-          {storyTitle}
+        <AppText variant="reader" style={styles.pageText}>
+          {page.text}
         </AppText>
-
-        <View style={styles.completedBody}>
-          <AppText variant="h3" style={styles.completedTitle}>
-            Казку прочитано
-          </AppText>
-          <AppText variant="body" color="secondary" style={styles.completedMessage}>
-            Дякуємо за спокійне читання разом.
-          </AppText>
-        </View>
-
-        <AppButton label="До казки" onPress={onBackToStory} />
       </View>
-    </AppScreen>
+    </View>
   );
 }
 
@@ -579,10 +501,13 @@ function createStyles(theme: AppTheme) {
     scrollContent: {
       flexGrow: 1,
     },
+    flowSection: {
+      gap: theme.spacing.space_5,
+    },
     pageImageFrame: {
-      width: '92%',
+      width: '98%',
       alignSelf: 'center',
-      padding: theme.spacing.space_2,
+      padding: theme.spacing.space_1,
       borderRadius: theme.radius.radius_lg,
     },
     pageImage: {
@@ -592,6 +517,7 @@ function createStyles(theme: AppTheme) {
     textBlock: {
       width: '100%',
       alignSelf: 'center',
+      paddingHorizontal: theme.spacing.space_2,
     },
     textBlockPhone: {
       flexGrow: 1,
@@ -601,53 +527,21 @@ function createStyles(theme: AppTheme) {
       width: '100%',
       textAlign: 'left',
     },
-    footer: {},
-    progressBlock: {
+    completionSection: {
+      marginTop: theme.spacing.space_6,
+      gap: theme.spacing.space_3,
       alignItems: 'center',
-      gap: theme.spacing.space_3,
+      paddingHorizontal: theme.spacing.space_2,
     },
-    progressBlockSoft: {
-      opacity: 0.85,
-    },
-    progressScale: {
-      transform: [{ scale: 0.9 }],
-    },
-    progressText: {
+    completionNote: {
       textAlign: 'center',
-    },
-    controlsRow: {
-      flexDirection: 'row',
-      gap: theme.spacing.space_3,
-    },
-    controlButton: {
-      flex: 1,
-    },
-    softControlButton: {
-      opacity: 0.9,
+      opacity: 0.78,
     },
     backToStoryButton: {
       alignSelf: 'center',
       minHeight: 40,
       paddingVertical: theme.spacing.space_2,
       paddingHorizontal: theme.spacing.space_5,
-    },
-    completedContainer: {
-      flex: 1,
-      paddingVertical: theme.layout.readerVerticalPadding,
-      justifyContent: 'space-between',
-    },
-    completedBody: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: theme.spacing.space_4,
-      paddingHorizontal: theme.spacing.space_4,
-    },
-    completedTitle: {
-      textAlign: 'center',
-    },
-    completedMessage: {
-      textAlign: 'center',
     },
   });
 }
