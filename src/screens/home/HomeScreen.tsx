@@ -254,12 +254,15 @@ function HeaderActionButton({ label, onPress }: HeaderActionButtonProps) {
     () =>
       StyleSheet.create({
         button: {
+          minHeight: 44,
           paddingVertical: theme.spacing.space_2,
           paddingHorizontal: theme.spacing.space_3,
           borderRadius: theme.radius.radius_md,
           backgroundColor: theme.colors.surface,
           borderWidth: 1,
           borderColor: theme.colors.border,
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         pressed: {
           opacity: theme.opacity.pressed,
@@ -269,7 +272,12 @@ function HeaderActionButton({ label, onPress }: HeaderActionButtonProps) {
   );
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+    >
       <AppText variant="caption" color="secondary">
         {label}
       </AppText>
