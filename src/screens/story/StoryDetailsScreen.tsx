@@ -129,7 +129,7 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
           <AppImage
             source={coverImage.source}
             fallbackLabel="Обкладинка"
-            height={200}
+            height={156}
             style={styles.coverImage}
           />
         </View>
@@ -150,26 +150,28 @@ export function StoryDetailsScreen({ navigation, route }: Props) {
           </View>
 
           {isStoryFavorite ? (
-            <AppText variant="caption" color="primary" style={styles.favoriteNote}>
+            <AppText variant="caption" color="secondary" style={styles.favoriteNote}>
               В обраному
             </AppText>
           ) : null}
 
           {hasProgress && !isCompleted ? (
-            <AppText variant="body" color="secondary" style={styles.progressNote}>
+            <AppText variant="caption" color="secondary" style={styles.progressNote}>
               Сторінка {progress.lastPage} з {story.pageCount}
             </AppText>
           ) : null}
 
           {isCompleted ? (
-            <AppText variant="body" color="secondary" style={styles.completedNote}>
+            <AppText variant="caption" color="secondary" style={styles.completedNote}>
               Казку прочитано
             </AppText>
           ) : null}
 
-          <AppText variant="bodyLarge" color="secondary" style={styles.description}>
-            {story.description}
-          </AppText>
+          <View style={styles.descriptionBlock}>
+            <AppText variant="bodyLarge" color="secondary" style={styles.description}>
+              {story.description}
+            </AppText>
+          </View>
 
           <View style={styles.actions}>
             <AppButton label={readButtonLabel} onPress={handleRead} />
@@ -195,35 +197,48 @@ function createStyles(theme: AppTheme) {
     coverFrame: {
       marginHorizontal: theme.layout.screenPadding,
       marginTop: theme.spacing.space_4,
+      alignSelf: 'center',
+      width: '88%',
     },
     coverImage: {
       borderRadius: theme.radius.radius_lg,
     },
     content: {
       paddingHorizontal: theme.layout.screenPadding,
-      paddingTop: theme.spacing.space_6,
-      gap: theme.spacing.space_3,
+      paddingTop: theme.spacing.space_5,
+      gap: theme.spacing.space_2,
     },
     meta: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing.space_3,
+      gap: theme.spacing.space_2,
       marginTop: theme.spacing.space_2,
+      opacity: 0.82,
     },
     favoriteNote: {
-      marginTop: theme.spacing.space_1,
+      marginTop: theme.spacing.space_2,
+      opacity: 0.78,
     },
     progressNote: {
       marginTop: theme.spacing.space_1,
+      opacity: 0.78,
     },
     completedNote: {
       marginTop: theme.spacing.space_1,
+      opacity: 0.78,
+    },
+    descriptionBlock: {
+      marginTop: theme.spacing.space_4,
+      backgroundColor: theme.colors.surfaceMuted,
+      borderRadius: theme.radius.radius_md,
+      paddingHorizontal: theme.spacing.space_4,
+      paddingVertical: theme.spacing.space_4,
     },
     description: {
-      marginTop: theme.spacing.space_3,
+      lineHeight: theme.typography.bodyLarge.lineHeight,
     },
     actions: {
-      marginTop: theme.spacing.space_6,
+      marginTop: theme.spacing.space_5,
       gap: theme.spacing.space_3,
     },
   });
