@@ -280,7 +280,7 @@ function ReaderContent({
               shouldShowIllustrations={shouldShowIllustrations}
               shouldPrioritizeText={shouldPrioritizeText}
               imageFrameBackground={modePresentation.imageFrameBackground}
-              textMaxWidth={readerLayout.textMaxWidth}
+              textMaxWidth={Math.round(readerLayout.textMaxWidth * 0.9)}
               styles={styles}
             />
           ))}
@@ -400,6 +400,7 @@ function ReaderFlowSection({
         imageFrameBackground ? (
           <View
             style={[
+              styles.imageBlock,
               styles.pageImageFrame,
               { backgroundColor: imageFrameBackground },
             ]}
@@ -418,7 +419,7 @@ function ReaderFlowSection({
             fallbackLabel="Ілюстрація"
             height={pageImageHeight}
             collapseWhenUnavailable={pageImage.type === 'missing'}
-            style={[styles.pageImage, { maxHeight: pageImageHeight }]}
+            style={[styles.imageBlock, styles.pageImage, { maxHeight: pageImageHeight }]}
           />
         )
       ) : null}
@@ -448,13 +449,14 @@ function createStyles(theme: AppTheme) {
     },
     storyTitle: {
       textAlign: 'center',
-      opacity: theme.opacity.pressed,
+      opacity: 0.62,
     },
     readerSettingsButton: {
       alignSelf: 'flex-start',
-      minHeight: 40,
-      paddingVertical: theme.spacing.space_2,
-      paddingHorizontal: theme.spacing.space_4,
+      minHeight: 36,
+      paddingVertical: theme.spacing.space_1,
+      paddingHorizontal: theme.spacing.space_3,
+      opacity: 0.86,
     },
     settingsOverlay: {
       flex: 1,
@@ -502,7 +504,10 @@ function createStyles(theme: AppTheme) {
       flexGrow: 1,
     },
     flowSection: {
-      gap: theme.spacing.space_5,
+      marginBottom: theme.spacing.space_8,
+    },
+    imageBlock: {
+      marginBottom: theme.spacing.space_4,
     },
     pageImageFrame: {
       width: '98%',
@@ -517,7 +522,9 @@ function createStyles(theme: AppTheme) {
     textBlock: {
       width: '100%',
       alignSelf: 'center',
-      paddingHorizontal: theme.spacing.space_2,
+      paddingHorizontal: theme.spacing.space_3,
+      paddingVertical: theme.spacing.space_2,
+      marginBottom: theme.spacing.space_2,
     },
     textBlockPhone: {
       flexGrow: 1,
@@ -526,22 +533,24 @@ function createStyles(theme: AppTheme) {
       color: theme.colors.textPrimary,
       width: '100%',
       textAlign: 'left',
+      lineHeight: theme.typography.reader.lineHeight + 6,
     },
     completionSection: {
-      marginTop: theme.spacing.space_6,
-      gap: theme.spacing.space_3,
+      marginTop: theme.spacing.space_4,
+      gap: theme.spacing.space_2,
       alignItems: 'center',
-      paddingHorizontal: theme.spacing.space_2,
+      paddingHorizontal: theme.spacing.space_4,
     },
     completionNote: {
       textAlign: 'center',
-      opacity: 0.78,
+      opacity: 0.64,
     },
     backToStoryButton: {
       alignSelf: 'center',
-      minHeight: 40,
-      paddingVertical: theme.spacing.space_2,
-      paddingHorizontal: theme.spacing.space_5,
+      minHeight: 36,
+      paddingVertical: theme.spacing.space_1,
+      paddingHorizontal: theme.spacing.space_4,
+      opacity: 0.9,
     },
   });
 }
