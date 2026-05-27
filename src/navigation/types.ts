@@ -7,5 +7,6 @@ export type RootStackParamList = {
   StoryDetails: { storyId: string };
   Reader: { storyId: string };
   Favorites: undefined;
+  Library: undefined;
   Profile: undefined;
 };
