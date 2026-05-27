@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   AppButton,
-  AppChip,
   AppErrorState,
   AppImage,
   AppLoadingState,
@@ -176,6 +175,7 @@ function ReaderContent({
   const { theme } = useAppTheme();
   const readerLayout = useReaderLayout();
   const [readerSettings, setReaderSettings] = useState(getReaderSettings);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { showIllustrations, readingMode } = readerSettings;
   const page =
     pages.find((item) => item.pageNumber === currentPage) ?? pages[0];
@@ -289,35 +289,17 @@ function ReaderContent({
           {storyTitle}
         </AppText>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.modeRow,
-            { paddingBottom: modePresentation.modeRowPaddingBottom },
-          ]}
-        >
-          {READER_MODE_OPTIONS.map((option) => (
-            <AppChip
-              key={option.mode}
-              label={option.label}
-              selected={readingMode === option.mode}
-              onPress={() => handleSelectReadingMode(option.mode)}
-            />
-          ))}
-        </ScrollView>
-
         <AppButton
-          label={
-            shouldShowIllustrations
-              ? 'Сховати ілюстрації'
-              : 'Показувати ілюстрації'
-          }
+          label="Режим читання"
           variant="secondary"
-          onPress={handleToggleIllustrations}
+          onPress={() => setIsSettingsOpen(true)}
           style={[
-            styles.illustrationToggle,
-            { marginBottom: modePresentation.illustrationToggleMarginBottom },
+            styles.readerSettingsButton,
+            {
+              marginBottom:
+                modePresentation.modeRowPaddingBottom +
+                modePresentation.illustrationToggleMarginBottom,
+            },
           ]}
         />
 
@@ -380,12 +362,14 @@ function ReaderContent({
             },
           ]}
         >
-          <View style={styles.progressBlock}>
-            <AppProgress
-              variant="dots"
-              total={pages.length}
-              current={pageIndex}
-            />
+          <View style={[styles.progressBlock, styles.progressBlockSoft]}>
+            <View style={styles.progressScale}>
+              <AppProgress
+                variant="dots"
+                total={pages.length}
+                current={pageIndex}
+              />
+            </View>
             <AppText variant="caption" color="muted" style={styles.progressText}>
               Сторінка {pageIndex} з {pages.length}
             </AppText>
@@ -397,13 +381,13 @@ function ReaderContent({
               variant="secondary"
               disabled={isFirstPage}
               onPress={handlePrevious}
-              style={styles.controlButton}
+              style={[styles.controlButton, styles.softControlButton]}
             />
             <AppButton
               label={isLastPage ? 'Завершити' : 'Далі'}
-              variant={isLastPage ? 'primary' : 'secondary'}
+              variant="secondary"
               onPress={handleNext}
-              style={styles.controlButton}
+              style={[styles.controlButton, styles.softControlButton]}
             />
           </View>
 
@@ -411,9 +395,78 @@ function ReaderContent({
             label="До казки"
             variant="secondary"
             onPress={onBackToStory}
+            style={styles.backToStoryButton}
           />
         </View>
       </View>
+      <Modal
+        visible={isSettingsOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setIsSettingsOpen(false)}
+      >
+        <View style={styles.settingsOverlay}>
+          <Pressable
+            style={styles.settingsBackdrop}
+            onPress={() => setIsSettingsOpen(false)}
+          />
+          <View style={styles.settingsSheet}>
+            <AppText variant="h3">Режим читання</AppText>
+            <View style={styles.settingsList}>
+              {READER_MODE_OPTIONS.map((option) => {
+                const isCurrentMode = option.mode === readingMode;
+
+                return (
+                  <Pressable
+                    key={option.mode}
+                    style={({ pressed }) => [
+                      styles.settingsItem,
+                      isCurrentMode && styles.settingsItemSelected,
+                      pressed && styles.settingsItemPressed,
+                    ]}
+                    onPress={() => {
+                      handleSelectReadingMode(option.mode);
+                      setIsSettingsOpen(false);
+                    }}
+                  >
+                    <AppText
+                      variant="body"
+                      color={isCurrentMode ? 'primary' : 'secondary'}
+                    >
+                      {option.label}
+                    </AppText>
+                    {isCurrentMode ? (
+                      <AppText variant="caption" color="primary">
+                        Поточний
+                      </AppText>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.settingsItem,
+                pressed && styles.settingsItemPressed,
+              ]}
+              onPress={handleToggleIllustrations}
+            >
+              <AppText variant="body" color="secondary">
+                Показувати ілюстрації
+              </AppText>
+              <AppText variant="caption" color={showIllustrations ? 'primary' : 'muted'}>
+                {showIllustrations ? 'Увімкнено' : 'Вимкнено'}
+              </AppText>
+            </Pressable>
+            <AppButton
+              label="Закрити"
+              variant="secondary"
+              onPress={() => setIsSettingsOpen(false)}
+              style={styles.settingsCloseButton}
+            />
+          </View>
+        </View>
+      </Modal>
     </AppScreen>
   );
 }
@@ -473,11 +526,56 @@ function createStyles(theme: AppTheme) {
     },
     storyTitle: {
       textAlign: 'center',
+      opacity: theme.opacity.pressed,
     },
-    modeRow: {
+    readerSettingsButton: {
+      alignSelf: 'flex-start',
+      minHeight: 40,
+      paddingVertical: theme.spacing.space_2,
+      paddingHorizontal: theme.spacing.space_4,
+    },
+    settingsOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    settingsBackdrop: {
+      flex: 1,
+      backgroundColor: theme.colors.textPrimary,
+      opacity: 0.15,
+    },
+    settingsSheet: {
+      backgroundColor: theme.colors.background,
+      borderTopLeftRadius: theme.radius.radius_lg,
+      borderTopRightRadius: theme.radius.radius_lg,
+      paddingHorizontal: theme.spacing.space_4,
+      paddingTop: theme.spacing.space_4,
+      paddingBottom: theme.spacing.space_5,
+      gap: theme.spacing.space_3,
+    },
+    settingsList: {
       gap: theme.spacing.space_2,
     },
-    illustrationToggle: {},
+    settingsItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.radius_md,
+      paddingHorizontal: theme.spacing.space_4,
+      paddingVertical: theme.spacing.space_3,
+    },
+    settingsItemSelected: {
+      backgroundColor: theme.colors.primarySoft,
+      borderColor: theme.colors.primary,
+    },
+    settingsItemPressed: {
+      opacity: theme.opacity.pressed,
+    },
+    settingsCloseButton: {
+      marginTop: theme.spacing.space_1,
+    },
     scrollContent: {
       flexGrow: 1,
     },
@@ -508,6 +606,12 @@ function createStyles(theme: AppTheme) {
       alignItems: 'center',
       gap: theme.spacing.space_3,
     },
+    progressBlockSoft: {
+      opacity: 0.85,
+    },
+    progressScale: {
+      transform: [{ scale: 0.9 }],
+    },
     progressText: {
       textAlign: 'center',
     },
@@ -517,6 +621,15 @@ function createStyles(theme: AppTheme) {
     },
     controlButton: {
       flex: 1,
+    },
+    softControlButton: {
+      opacity: 0.9,
+    },
+    backToStoryButton: {
+      alignSelf: 'center',
+      minHeight: 40,
+      paddingVertical: theme.spacing.space_2,
+      paddingHorizontal: theme.spacing.space_5,
     },
     completedContainer: {
       flex: 1,
