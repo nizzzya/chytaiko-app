@@ -41,7 +41,7 @@ const AGE_FILTERS: { id: AgeFilter; label: string }[] = [
 /** Mobile bookshelf columns; increase when tablet layout is added. */
 const BOOKSHELF_COLUMN_COUNT = 2;
 
-const bookColumnBasisPercent = `${Math.floor(100 / BOOKSHELF_COLUMN_COUNT - 3)}%`;
+const bookColumnBasisPercent = `${Math.floor(100 / BOOKSHELF_COLUMN_COUNT - 4)}%`;
 
 export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
@@ -118,7 +118,7 @@ export function HomeScreen({ navigation }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.topBar}>
+        <View style={styles.headerBlock}>
           <View style={styles.header}>
             <AppText variant="h1" style={styles.brandTitle}>
               Читайко
@@ -230,13 +230,16 @@ function BookshelfStoryItem({
         pressed && styles.bookItemPressed,
       ]}
     >
-      <AppImage
-        source={coverImage.source}
-        fallbackLabel="Обкладинка"
-        aspectRatio={3 / 4}
-        style={styles.bookCover}
-      />
-      <AppText variant="body" numberOfLines={2} style={styles.bookTitle}>
+      <View style={styles.bookCoverFrame}>
+        <AppImage
+          source={coverImage.source}
+          fallbackLabel="Обкладинка"
+          aspectRatio={3 / 4}
+          resizeMode="cover"
+          style={styles.bookCover}
+        />
+      </View>
+      <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>
         {story.title}
       </AppText>
       <AppText variant="caption" color="muted" numberOfLines={1} style={styles.bookMeta}>
@@ -271,17 +274,20 @@ function ContinueReadingInvite({
         pressed && styles.continueInvitePressed,
       ]}
     >
-      <AppImage
-        source={coverImage.source}
-        fallbackLabel="Обкладинка"
-        aspectRatio={3 / 4}
-        style={styles.continueCover}
-      />
+      <View style={styles.continueCoverFrame}>
+        <AppImage
+          source={coverImage.source}
+          fallbackLabel="Обкладинка"
+          aspectRatio={3 / 4}
+          resizeMode="cover"
+          style={styles.continueCover}
+        />
+      </View>
       <View style={styles.continueBody}>
-        <AppText variant="caption" color="muted" style={styles.continuePrompt}>
+        <AppText variant="caption" color="secondary" style={styles.continuePrompt}>
           Повернемось до казки?
         </AppText>
-        <AppText variant="body" numberOfLines={2} style={styles.continueStoryTitle}>
+        <AppText variant="bodyLarge" numberOfLines={2} style={styles.continueStoryTitle}>
           {story.title}
         </AppText>
         <AppText variant="caption" color="muted" style={styles.continuePage}>
@@ -323,7 +329,7 @@ function HeaderActionButton({ label, onPress }: HeaderActionButtonProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <AppText variant="caption" color="muted" style={{ opacity: 0.82 }}>
+      <AppText variant="caption" color="muted" style={{ opacity: 0.68 }}>
         {label}
       </AppText>
     </Pressable>
@@ -334,72 +340,86 @@ function createStyles(theme: AppTheme) {
   return StyleSheet.create({
     scroll: {
       paddingHorizontal: theme.layout.screenPadding,
-      paddingTop: theme.spacing.space_4,
+      paddingTop: theme.spacing.space_5,
       paddingBottom: theme.spacing.space_16,
-      gap: theme.spacing.space_6,
+      gap: theme.spacing.space_8,
     },
-    topBar: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-      gap: theme.spacing.space_3,
+    headerBlock: {
+      gap: theme.spacing.space_4,
     },
     header: {
-      flex: 1,
-      gap: theme.spacing.space_1,
+      gap: theme.spacing.space_2,
     },
     brandTitle: {
       fontWeight: '600',
+      letterSpacing: -0.4,
+      lineHeight: theme.typography.h1.lineHeight,
     },
     brandSubtitle: {
-      opacity: 0.78,
+      opacity: 0.66,
+      lineHeight: theme.typography.body.lineHeight + 2,
+      maxWidth: 280,
     },
     headerActions: {
-      gap: theme.spacing.space_1,
-      alignItems: 'flex-end',
-      paddingTop: theme.spacing.space_1,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: theme.spacing.space_4,
     },
     filterRow: {
       gap: theme.spacing.space_2,
       paddingRight: theme.layout.screenPadding,
-      opacity: 0.72,
+      opacity: 0.58,
     },
     continueInvite: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.space_3,
-      paddingVertical: theme.spacing.space_2,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.divider,
+      gap: theme.spacing.space_4,
+      paddingVertical: theme.spacing.space_4,
+      paddingHorizontal: theme.spacing.space_1,
     },
     continueInvitePressed: {
       opacity: theme.opacity.pressed,
     },
+    continueCoverFrame: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderRadius: theme.radius.radius_md,
+      padding: theme.spacing.space_2,
+    },
     continueCover: {
-      width: 56,
+      width: 64,
       borderRadius: theme.radius.radius_sm,
+      backgroundColor: theme.colors.surface,
     },
     continueBody: {
       flex: 1,
-      gap: theme.spacing.space_1,
+      gap: theme.spacing.space_2,
+      paddingVertical: theme.spacing.space_1,
     },
     continuePrompt: {
-      opacity: 0.72,
+      opacity: 0.62,
+      letterSpacing: 0.2,
+      lineHeight: theme.typography.caption.lineHeight + 2,
     },
     continueStoryTitle: {
-      fontWeight: '500',
+      fontWeight: '600',
+      lineHeight: theme.typography.bodyLarge.lineHeight + 2,
     },
     continuePage: {
-      opacity: 0.7,
+      fontSize: 11,
+      lineHeight: 14,
+      opacity: 0.36,
     },
     offlineNote: {
-      opacity: 0.8,
+      opacity: 0.62,
+      lineHeight: theme.typography.caption.lineHeight + 2,
     },
     catalog: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'space-between',
-      rowGap: theme.spacing.space_5,
+      rowGap: theme.spacing.space_8,
+      paddingTop: theme.spacing.space_1,
     },
     bookItem: {
       flexGrow: 0,
@@ -408,17 +428,27 @@ function createStyles(theme: AppTheme) {
     bookItemPressed: {
       opacity: theme.opacity.pressed,
     },
+    bookCoverFrame: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderRadius: theme.radius.radius_md,
+      padding: theme.spacing.space_2,
+      marginBottom: theme.spacing.space_3,
+    },
     bookCover: {
       width: '100%',
-      marginBottom: theme.spacing.space_2,
       borderRadius: theme.radius.radius_sm,
+      backgroundColor: theme.colors.surface,
     },
     bookTitle: {
-      fontWeight: '500',
-      marginBottom: theme.spacing.space_1,
+      fontWeight: '600',
+      marginBottom: theme.spacing.space_2,
+      paddingHorizontal: theme.spacing.space_1,
     },
     bookMeta: {
-      opacity: 0.72,
+      fontSize: 11,
+      lineHeight: 14,
+      opacity: 0.34,
+      paddingHorizontal: theme.spacing.space_1,
     },
   });
 }
