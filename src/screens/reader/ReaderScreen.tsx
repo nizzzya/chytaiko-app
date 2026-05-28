@@ -230,37 +230,40 @@ function ReaderContent({
         style={[
           styles.container,
           {
-            paddingHorizontal: readerLayout.contentPadding,
-            paddingTop: modePresentation.containerPaddingTop,
+            paddingTop: theme.spacing.space_2,
             paddingBottom: modePresentation.containerPaddingBottom,
           },
         ]}
       >
-        <AppText
-          variant="caption"
-          color={modePresentation.storyTitleColor}
-          numberOfLines={1}
+        <View
           style={[
-            styles.storyTitle,
-            { marginBottom: modePresentation.storyTitleMarginBottom },
+            styles.readerChrome,
+            { paddingHorizontal: readerLayout.contentPadding },
           ]}
         >
-          {storyTitle}
-        </AppText>
+          <AppText
+            variant="caption"
+            color="muted"
+            numberOfLines={1}
+            style={styles.storyTitle}
+          >
+            {storyTitle}
+          </AppText>
 
-        <AppButton
-          label="Режим читання"
-          variant="secondary"
-          onPress={() => setIsSettingsOpen(true)}
-          style={[
-            styles.readerSettingsButton,
-            {
-              marginBottom:
-                modePresentation.modeRowPaddingBottom +
-                modePresentation.illustrationToggleMarginBottom,
-            },
-          ]}
-        />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Режим читання"
+            onPress={() => setIsSettingsOpen(true)}
+            style={({ pressed }) => [
+              styles.readerSettingsPressable,
+              pressed && styles.readerSettingsPressed,
+            ]}
+          >
+            <AppText variant="caption" color="muted">
+              Режим читання
+            </AppText>
+          </Pressable>
+        </View>
 
         <ScrollView
           contentContainerStyle={[
@@ -279,8 +282,9 @@ function ReaderContent({
               pageImageHeight={pageImageHeight}
               shouldShowIllustrations={shouldShowIllustrations}
               shouldPrioritizeText={shouldPrioritizeText}
-              imageFrameBackground={modePresentation.imageFrameBackground}
               textMaxWidth={Math.round(readerLayout.textMaxWidth * 0.9)}
+              textPaddingHorizontal={readerLayout.contentPadding}
+              isTablet={readerLayout.isTablet}
               styles={styles}
             />
           ))}
@@ -378,8 +382,9 @@ type ReaderFlowSectionProps = {
   pageImageHeight: number;
   shouldShowIllustrations: boolean;
   shouldPrioritizeText: boolean;
-  imageFrameBackground: string | null;
   textMaxWidth: number;
+  textPaddingHorizontal: number;
+  isTablet: boolean;
   styles: ReturnType<typeof createStyles>;
 };
 
@@ -388,8 +393,9 @@ function ReaderFlowSection({
   pageImageHeight,
   shouldShowIllustrations,
   shouldPrioritizeText,
-  imageFrameBackground,
   textMaxWidth,
+  textPaddingHorizontal,
+  isTablet,
   styles,
 }: ReaderFlowSectionProps) {
   const pageImage = useStoryImageSource(page.imageUrl);
@@ -397,38 +403,28 @@ function ReaderFlowSection({
   return (
     <View style={styles.flowSection}>
       {shouldShowIllustrations ? (
-        imageFrameBackground ? (
-          <View
-            style={[
-              styles.imageBlock,
-              styles.pageImageFrame,
-              { backgroundColor: imageFrameBackground },
-            ]}
-          >
-            <AppImage
-              source={pageImage.source}
-              fallbackLabel="Ілюстрація"
-              height={pageImageHeight}
-              collapseWhenUnavailable={pageImage.type === 'missing'}
-              style={[styles.pageImage, { maxHeight: pageImageHeight }]}
-            />
-          </View>
-        ) : (
-          <AppImage
-            source={pageImage.source}
-            fallbackLabel="Ілюстрація"
-            height={pageImageHeight}
-            collapseWhenUnavailable={pageImage.type === 'missing'}
-            style={[styles.imageBlock, styles.pageImage, { maxHeight: pageImageHeight }]}
-          />
-        )
+        <AppImage
+          source={pageImage.source}
+          fallbackLabel="Ілюстрація"
+          height={pageImageHeight}
+          resizeMode="cover"
+          collapseWhenUnavailable={pageImage.type === 'missing'}
+          style={[
+            styles.pageImageBleed,
+            { maxHeight: pageImageHeight },
+            isTablet && styles.pageImageBleedTablet,
+          ]}
+        />
       ) : null}
 
       <View
         style={[
           styles.textBlock,
           shouldPrioritizeText && styles.textBlockPhone,
-          { maxWidth: textMaxWidth },
+          {
+            maxWidth: textMaxWidth,
+            paddingHorizontal: textPaddingHorizontal,
+          },
         ]}
       >
         <AppText variant="reader" style={styles.pageText}>
@@ -447,16 +443,23 @@ function createStyles(theme: AppTheme) {
     container: {
       flex: 1,
     },
-    storyTitle: {
-      textAlign: 'center',
-      opacity: 0.62,
+    readerChrome: {
+      gap: theme.spacing.space_1,
+      marginBottom: theme.spacing.space_2,
     },
-    readerSettingsButton: {
+    storyTitle: {
+      textAlign: 'left',
+      opacity: 0.42,
+    },
+    readerSettingsPressable: {
       alignSelf: 'flex-start',
-      minHeight: 36,
+      minHeight: 28,
+      justifyContent: 'center',
       paddingVertical: theme.spacing.space_1,
-      paddingHorizontal: theme.spacing.space_3,
-      opacity: 0.86,
+      opacity: 0.72,
+    },
+    readerSettingsPressed: {
+      opacity: theme.opacity.pressed,
     },
     settingsOverlay: {
       flex: 1,
@@ -506,23 +509,19 @@ function createStyles(theme: AppTheme) {
     flowSection: {
       marginBottom: theme.spacing.space_8,
     },
-    imageBlock: {
-      marginBottom: theme.spacing.space_4,
-    },
-    pageImageFrame: {
-      width: '98%',
-      alignSelf: 'center',
-      padding: theme.spacing.space_1,
-      borderRadius: theme.radius.radius_lg,
-    },
-    pageImage: {
+    pageImageBleed: {
       width: '100%',
-      borderRadius: theme.radius.radius_lg,
+      alignSelf: 'stretch',
+      marginBottom: theme.spacing.space_3,
+      borderRadius: 0,
+      backgroundColor: 'transparent',
+    },
+    pageImageBleedTablet: {
+      marginBottom: theme.spacing.space_4,
     },
     textBlock: {
       width: '100%',
       alignSelf: 'center',
-      paddingHorizontal: theme.spacing.space_3,
       paddingVertical: theme.spacing.space_2,
       marginBottom: theme.spacing.space_2,
     },
