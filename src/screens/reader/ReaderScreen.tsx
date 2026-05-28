@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
   AppButton,
-  AppChip,
   AppErrorState,
   AppImage,
   AppLoadingState,
-  AppProgress,
   AppScreen,
   AppText,
 } from '../../components/ui';
@@ -51,7 +49,6 @@ export function ReaderScreen({ navigation, route }: Props) {
   const pages = getStoryPages(storyId);
   const [hydrationReady, setHydrationReady] = useState(isHydrated());
   const [progressInitialized, setProgressInitialized] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => subscribeHydration(() => setHydrationReady(true)), []);
@@ -60,7 +57,6 @@ export function ReaderScreen({ navigation, route }: Props) {
     const result = getProgress(storyId);
 
     if (!result.success || !result.data) {
-      setCurrentPage(1);
       setIsCompleted(false);
       saveReaderSession(storyId, 1);
       return;
@@ -71,7 +67,6 @@ export function ReaderScreen({ navigation, route }: Props) {
       Math.max(pages.length, 1),
     );
 
-    setCurrentPage(lastPage);
     setIsCompleted(result.data.completed);
     saveReaderSession(storyId, lastPage);
   }, [storyId, pages.length]);
@@ -123,30 +118,14 @@ export function ReaderScreen({ navigation, route }: Props) {
     );
   }
 
-  if (isCompleted) {
-    return (
-      <ReaderCompletedView
-        storyTitle={story.title}
-        styles={styles}
-        onBackToStory={goToStoryDetails}
-      />
-    );
-  }
-
   return (
     <ReaderContent
       storyTitle={story.title}
       storyId={storyId}
       pages={pages}
-      currentPage={currentPage}
+      isCompleted={isCompleted}
       styles={styles}
-      onPageChange={setCurrentPage}
-      onComplete={() => {
-        saveProgress(storyId, pages.length);
-        markCompleted(storyId);
-        clearReaderSession();
-        setIsCompleted(true);
-      }}
+      onMarkCompleted={() => setIsCompleted(true)}
       onBackToStory={goToStoryDetails}
     />
   );
@@ -156,10 +135,9 @@ type ReaderContentProps = {
   storyTitle: string;
   storyId: string;
   pages: StoryPage[];
-  currentPage: number;
+  isCompleted: boolean;
   styles: ReturnType<typeof createStyles>;
-  onPageChange: (page: number) => void;
-  onComplete: () => void;
+  onMarkCompleted: () => void;
   onBackToStory: () => void;
 };
 
@@ -167,22 +145,16 @@ function ReaderContent({
   storyTitle,
   storyId,
   pages,
-  currentPage,
+  isCompleted,
   styles,
-  onPageChange,
-  onComplete,
+  onMarkCompleted,
   onBackToStory,
 }: ReaderContentProps) {
   const { theme } = useAppTheme();
   const readerLayout = useReaderLayout();
   const [readerSettings, setReaderSettings] = useState(getReaderSettings);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { showIllustrations, readingMode } = readerSettings;
-  const page =
-    pages.find((item) => item.pageNumber === currentPage) ?? pages[0];
-  const pageIndex = page.pageNumber;
-  const isFirstPage = pageIndex <= 1;
-  const isLastPage = pageIndex >= pages.length;
-  const pageImage = useStoryImageSource(page.imageUrl);
 
   useEffect(
     () => subscribeReaderSettings((settings) => setReaderSettings(settings)),
@@ -235,28 +207,15 @@ function ReaderContent({
     });
   };
 
-  const goToPage = (nextPage: number) => {
-    const clampedPage = Math.min(Math.max(nextPage, 1), pages.length);
-    onPageChange(clampedPage);
-    saveProgress(storyId, clampedPage);
-    saveReaderSession(storyId, clampedPage);
-  };
-
-  const handlePrevious = () => {
-    if (isFirstPage) {
-      return;
+  const handleReturnToStory = () => {
+    if (!isCompleted) {
+      saveProgress(storyId, pages.length);
+      markCompleted(storyId);
+      clearReaderSession();
+      onMarkCompleted();
     }
 
-    goToPage(pageIndex - 1);
-  };
-
-  const handleNext = () => {
-    if (isLastPage) {
-      onComplete();
-      return;
-    }
-
-    goToPage(pageIndex + 1);
+    onBackToStory();
   };
 
   return (
@@ -271,55 +230,40 @@ function ReaderContent({
         style={[
           styles.container,
           {
-            paddingHorizontal: readerLayout.contentPadding,
-            paddingTop: modePresentation.containerPaddingTop,
+            paddingTop: theme.spacing.space_2,
             paddingBottom: modePresentation.containerPaddingBottom,
           },
         ]}
       >
-        <AppText
-          variant="caption"
-          color={modePresentation.storyTitleColor}
-          numberOfLines={1}
+        <View
           style={[
-            styles.storyTitle,
-            { marginBottom: modePresentation.storyTitleMarginBottom },
+            styles.readerChrome,
+            { paddingHorizontal: readerLayout.contentPadding },
           ]}
         >
-          {storyTitle}
-        </AppText>
+          <AppText
+            variant="caption"
+            color="muted"
+            numberOfLines={1}
+            style={styles.storyTitle}
+          >
+            {storyTitle}
+          </AppText>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.modeRow,
-            { paddingBottom: modePresentation.modeRowPaddingBottom },
-          ]}
-        >
-          {READER_MODE_OPTIONS.map((option) => (
-            <AppChip
-              key={option.mode}
-              label={option.label}
-              selected={readingMode === option.mode}
-              onPress={() => handleSelectReadingMode(option.mode)}
-            />
-          ))}
-        </ScrollView>
-
-        <AppButton
-          label={
-            shouldShowIllustrations
-              ? 'Сховати ілюстрації'
-              : 'Показувати ілюстрації'
-          }
-          variant="secondary"
-          onPress={handleToggleIllustrations}
-          style={[
-            styles.illustrationToggle,
-            { marginBottom: modePresentation.illustrationToggleMarginBottom },
-          ]}
-        />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Режим читання"
+            onPress={() => setIsSettingsOpen(true)}
+            style={({ pressed }) => [
+              styles.readerSettingsPressable,
+              pressed && styles.readerSettingsPressed,
+            ]}
+          >
+            <AppText variant="caption" color="muted">
+              Режим читання
+            </AppText>
+          </Pressable>
+        </View>
 
         <ScrollView
           contentContainerStyle={[
@@ -331,135 +275,163 @@ function ReaderContent({
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {shouldShowIllustrations ? (
-            modePresentation.imageFrameBackground ? (
-              <View
-                style={[
-                  styles.pageImageFrame,
-                  { backgroundColor: modePresentation.imageFrameBackground },
-                ]}
-              >
-                <AppImage
-                  source={pageImage.source}
-                  fallbackLabel="Ілюстрація"
-                  height={pageImageHeight}
-                  collapseWhenUnavailable={pageImage.type === 'missing'}
-                  style={[styles.pageImage, { maxHeight: pageImageHeight }]}
-                />
-              </View>
-            ) : (
-              <AppImage
-                source={pageImage.source}
-                fallbackLabel="Ілюстрація"
-                height={pageImageHeight}
-                collapseWhenUnavailable={pageImage.type === 'missing'}
-                style={[styles.pageImage, { maxHeight: pageImageHeight }]}
-              />
-            )
-          ) : null}
+          {pages.map((page) => (
+            <ReaderFlowSection
+              key={page.id}
+              page={page}
+              pageImageHeight={pageImageHeight}
+              shouldShowIllustrations={shouldShowIllustrations}
+              shouldPrioritizeText={shouldPrioritizeText}
+              textMaxWidth={Math.round(readerLayout.textMaxWidth * 0.9)}
+              textPaddingHorizontal={readerLayout.contentPadding}
+              isTablet={readerLayout.isTablet}
+              styles={styles}
+            />
+          ))}
 
-          <View
-            style={[
-              styles.textBlock,
-              shouldPrioritizeText && styles.textBlockPhone,
-              { maxWidth: readerLayout.textMaxWidth },
-            ]}
-          >
-            <AppText variant="reader" style={styles.pageText}>
-              {page.text}
+          <View style={styles.completionSection}>
+            <AppText variant="body" color="secondary" style={styles.completionNote}>
+              {isCompleted ? 'Казку прочитано.' : 'Дякуємо за спокійне читання разом.'}
             </AppText>
+            <AppButton
+              label="Повернутись до казки"
+              variant="secondary"
+              onPress={handleReturnToStory}
+              style={styles.backToStoryButton}
+            />
           </View>
         </ScrollView>
-
-        <View
-          style={[
-            styles.footer,
-            {
-              paddingTop: modePresentation.footerPaddingTop,
-              gap: modePresentation.footerGap,
-            },
-          ]}
-        >
-          <View style={styles.progressBlock}>
-            <AppProgress
-              variant="dots"
-              total={pages.length}
-              current={pageIndex}
-            />
-            <AppText variant="caption" color="muted" style={styles.progressText}>
-              Сторінка {pageIndex} з {pages.length}
-            </AppText>
-          </View>
-
-          <View style={styles.controlsRow}>
-            <AppButton
-              label="Назад"
-              variant="secondary"
-              disabled={isFirstPage}
-              onPress={handlePrevious}
-              style={styles.controlButton}
-            />
-            <AppButton
-              label={isLastPage ? 'Завершити' : 'Далі'}
-              variant={isLastPage ? 'primary' : 'secondary'}
-              onPress={handleNext}
-              style={styles.controlButton}
-            />
-          </View>
-
-          <AppButton
-            label="До казки"
-            variant="secondary"
-            onPress={onBackToStory}
-          />
-        </View>
       </View>
+
+      <Modal
+        visible={isSettingsOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setIsSettingsOpen(false)}
+      >
+        <View style={styles.settingsOverlay}>
+          <Pressable
+            style={styles.settingsBackdrop}
+            onPress={() => setIsSettingsOpen(false)}
+          />
+          <View style={styles.settingsSheet}>
+            <AppText variant="h3">Режим читання</AppText>
+            <View style={styles.settingsList}>
+              {READER_MODE_OPTIONS.map((option) => {
+                const isCurrentMode = option.mode === readingMode;
+
+                return (
+                  <Pressable
+                    key={option.mode}
+                    style={({ pressed }) => [
+                      styles.settingsItem,
+                      isCurrentMode && styles.settingsItemSelected,
+                      pressed && styles.settingsItemPressed,
+                    ]}
+                    onPress={() => {
+                      handleSelectReadingMode(option.mode);
+                      setIsSettingsOpen(false);
+                    }}
+                  >
+                    <AppText
+                      variant="body"
+                      color={isCurrentMode ? 'primary' : 'secondary'}
+                    >
+                      {option.label}
+                    </AppText>
+                    {isCurrentMode ? (
+                      <AppText variant="caption" color="primary">
+                        Поточний
+                      </AppText>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.settingsItem,
+                pressed && styles.settingsItemPressed,
+              ]}
+              onPress={handleToggleIllustrations}
+            >
+              <AppText variant="body" color="secondary">
+                Показувати ілюстрації
+              </AppText>
+              <AppText variant="caption" color={showIllustrations ? 'primary' : 'muted'}>
+                {showIllustrations ? 'Увімкнено' : 'Вимкнено'}
+              </AppText>
+            </Pressable>
+
+            <AppButton
+              label="Закрити"
+              variant="secondary"
+              onPress={() => setIsSettingsOpen(false)}
+              style={styles.settingsCloseButton}
+            />
+          </View>
+        </View>
+      </Modal>
     </AppScreen>
   );
 }
 
-type ReaderCompletedViewProps = {
-  storyTitle: string;
+type ReaderFlowSectionProps = {
+  page: StoryPage;
+  pageImageHeight: number;
+  shouldShowIllustrations: boolean;
+  shouldPrioritizeText: boolean;
+  textMaxWidth: number;
+  textPaddingHorizontal: number;
+  isTablet: boolean;
   styles: ReturnType<typeof createStyles>;
-  onBackToStory: () => void;
 };
 
-function ReaderCompletedView({
-  storyTitle,
+function ReaderFlowSection({
+  page,
+  pageImageHeight,
+  shouldShowIllustrations,
+  shouldPrioritizeText,
+  textMaxWidth,
+  textPaddingHorizontal,
+  isTablet,
   styles,
-  onBackToStory,
-}: ReaderCompletedViewProps) {
-  const readerLayout = useReaderLayout();
+}: ReaderFlowSectionProps) {
+  const pageImage = useStoryImageSource(page.imageUrl);
 
   return (
-    <AppScreen padded={false} style={styles.screen}>
+    <View style={styles.flowSection}>
+      {shouldShowIllustrations ? (
+        <AppImage
+          source={pageImage.source}
+          fallbackLabel="Ілюстрація"
+          height={pageImageHeight}
+          resizeMode="cover"
+          collapseWhenUnavailable={pageImage.type === 'missing'}
+          style={[
+            styles.pageImageBleed,
+            { maxHeight: pageImageHeight },
+            isTablet && styles.pageImageBleedTablet,
+          ]}
+        />
+      ) : null}
+
       <View
         style={[
-          styles.completedContainer,
-          { paddingHorizontal: readerLayout.contentPadding },
+          styles.textBlock,
+          shouldPrioritizeText && styles.textBlockPhone,
+          {
+            maxWidth: textMaxWidth,
+            paddingHorizontal: textPaddingHorizontal,
+          },
         ]}
       >
-        <AppText
-          variant="caption"
-          color="secondary"
-          numberOfLines={1}
-          style={styles.storyTitle}
-        >
-          {storyTitle}
+        <AppText variant="reader" style={styles.pageText}>
+          {page.text}
         </AppText>
-
-        <View style={styles.completedBody}>
-          <AppText variant="h3" style={styles.completedTitle}>
-            Казку прочитано
-          </AppText>
-          <AppText variant="body" color="secondary" style={styles.completedMessage}>
-            Дякуємо за спокійне читання разом.
-          </AppText>
-        </View>
-
-        <AppButton label="До казки" onPress={onBackToStory} />
       </View>
-    </AppScreen>
+    </View>
   );
 }
 
@@ -471,29 +443,87 @@ function createStyles(theme: AppTheme) {
     container: {
       flex: 1,
     },
-    storyTitle: {
-      textAlign: 'center',
+    readerChrome: {
+      gap: theme.spacing.space_1,
+      marginBottom: theme.spacing.space_2,
     },
-    modeRow: {
+    storyTitle: {
+      textAlign: 'left',
+      opacity: 0.42,
+    },
+    readerSettingsPressable: {
+      alignSelf: 'flex-start',
+      minHeight: 28,
+      justifyContent: 'center',
+      paddingVertical: theme.spacing.space_1,
+      opacity: 0.72,
+    },
+    readerSettingsPressed: {
+      opacity: theme.opacity.pressed,
+    },
+    settingsOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    settingsBackdrop: {
+      flex: 1,
+      backgroundColor: theme.colors.textPrimary,
+      opacity: 0.15,
+    },
+    settingsSheet: {
+      backgroundColor: theme.colors.background,
+      borderTopLeftRadius: theme.radius.radius_lg,
+      borderTopRightRadius: theme.radius.radius_lg,
+      paddingHorizontal: theme.spacing.space_4,
+      paddingTop: theme.spacing.space_4,
+      paddingBottom: theme.spacing.space_5,
+      gap: theme.spacing.space_3,
+    },
+    settingsList: {
       gap: theme.spacing.space_2,
     },
-    illustrationToggle: {},
+    settingsItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.radius_md,
+      paddingHorizontal: theme.spacing.space_4,
+      paddingVertical: theme.spacing.space_3,
+    },
+    settingsItemSelected: {
+      backgroundColor: theme.colors.primarySoft,
+      borderColor: theme.colors.primary,
+    },
+    settingsItemPressed: {
+      opacity: theme.opacity.pressed,
+    },
+    settingsCloseButton: {
+      marginTop: theme.spacing.space_1,
+    },
     scrollContent: {
       flexGrow: 1,
     },
-    pageImageFrame: {
-      width: '92%',
-      alignSelf: 'center',
-      padding: theme.spacing.space_2,
-      borderRadius: theme.radius.radius_lg,
+    flowSection: {
+      marginBottom: theme.spacing.space_8,
     },
-    pageImage: {
+    pageImageBleed: {
       width: '100%',
-      borderRadius: theme.radius.radius_lg,
+      alignSelf: 'stretch',
+      marginBottom: theme.spacing.space_3,
+      borderRadius: 0,
+      backgroundColor: 'transparent',
+    },
+    pageImageBleedTablet: {
+      marginBottom: theme.spacing.space_4,
     },
     textBlock: {
       width: '100%',
       alignSelf: 'center',
+      paddingVertical: theme.spacing.space_2,
+      marginBottom: theme.spacing.space_2,
     },
     textBlockPhone: {
       flexGrow: 1,
@@ -502,39 +532,24 @@ function createStyles(theme: AppTheme) {
       color: theme.colors.textPrimary,
       width: '100%',
       textAlign: 'left',
+      lineHeight: theme.typography.reader.lineHeight + 6,
     },
-    footer: {},
-    progressBlock: {
+    completionSection: {
+      marginTop: theme.spacing.space_4,
+      gap: theme.spacing.space_2,
       alignItems: 'center',
-      gap: theme.spacing.space_3,
-    },
-    progressText: {
-      textAlign: 'center',
-    },
-    controlsRow: {
-      flexDirection: 'row',
-      gap: theme.spacing.space_3,
-    },
-    controlButton: {
-      flex: 1,
-    },
-    completedContainer: {
-      flex: 1,
-      paddingVertical: theme.layout.readerVerticalPadding,
-      justifyContent: 'space-between',
-    },
-    completedBody: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: theme.spacing.space_4,
       paddingHorizontal: theme.spacing.space_4,
     },
-    completedTitle: {
+    completionNote: {
       textAlign: 'center',
+      opacity: 0.64,
     },
-    completedMessage: {
-      textAlign: 'center',
+    backToStoryButton: {
+      alignSelf: 'center',
+      minHeight: 36,
+      paddingVertical: theme.spacing.space_1,
+      paddingHorizontal: theme.spacing.space_4,
+      opacity: 0.9,
     },
   });
 }
