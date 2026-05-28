@@ -43,6 +43,16 @@ const BOOKSHELF_COLUMN_COUNT = 2;
 
 const bookColumnBasisPercent = `${Math.floor(100 / BOOKSHELF_COLUMN_COUNT - 4)}%`;
 
+function chunkStoriesForShelf(stories: Story[], columnCount: number): Story[][] {
+  const rows: Story[][] = [];
+
+  for (let index = 0; index < stories.length; index += columnCount) {
+    rows.push(stories.slice(index, index + columnCount));
+  }
+
+  return rows;
+}
+
 export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -103,11 +113,13 @@ export function HomeScreen({ navigation }: Props) {
 
   if (activeStories.length === 0) {
     return (
-      <AppScreen>
-        <AppEmptyState
-          title="Поки немає казок"
-          message="Незабаром з’являться нові історії."
-        />
+      <AppScreen padded={false}>
+        <View style={styles.catalogEmptyScreen}>
+          <AppEmptyState
+            title="Поличка зараз порожня"
+            message="Незабаром тут з’являться нові казки для спокійного читання."
+          />
+        </View>
       </AppScreen>
     );
   }
@@ -177,28 +189,47 @@ export function HomeScreen({ navigation }: Props) {
           </AppText>
         ) : null}
 
-        {visibleStories.length === 0 ? (
-          <AppEmptyState
-            title="Немає казок"
-            message="Спробуйте обрати інший вік."
-            actionLabel="Усі казки"
-            onAction={() => setAgeFilter('all')}
-          />
-        ) : (
-          <View style={styles.catalog}>
-            {visibleStories.map((story) => (
-              <BookshelfStoryItem
-                key={story.id}
-                story={story}
-                columnBasis={bookColumnBasisPercent}
+        <View style={styles.bookshelfSection}>
+          {visibleStories.length === 0 ? (
+            <View style={styles.shelfSurface}>
+              <FilteredShelfEmpty
                 styles={styles}
-                onPress={() =>
-                  navigation.navigate('StoryDetails', { storyId: story.id })
-                }
+                onShowAll={() => setAgeFilter('all')}
               />
-            ))}
-          </View>
-        )}
+            </View>
+          ) : (
+            <View style={styles.shelfSurface}>
+              <View style={styles.catalog}>
+                {chunkStoriesForShelf(visibleStories, BOOKSHELF_COLUMN_COUNT).map(
+                  (row, rowIndex, rows) => (
+                    <View
+                      key={`shelf-row-${rowIndex}`}
+                      style={[
+                        styles.shelfRow,
+                        rowIndex < rows.length - 1 && styles.shelfRowSpaced,
+                      ]}
+                    >
+                      {row.map((story) => (
+                        <BookshelfStoryItem
+                          key={story.id}
+                          story={story}
+                          columnBasis={bookColumnBasisPercent}
+                          styles={styles}
+                          onPress={() =>
+                            navigation.navigate('StoryDetails', {
+                              storyId: story.id,
+                            })
+                          }
+                        />
+                      ))}
+                    </View>
+                  ),
+                )}
+              </View>
+              <View style={styles.shelfBase} />
+            </View>
+          )}
+        </View>
       </ScrollView>
     </AppScreen>
   );
@@ -229,6 +260,7 @@ function BookshelfStoryItem({
         { flexBasis: columnBasis, maxWidth: columnBasis },
         pressed && styles.bookItemPressed,
       ]}
+
     >
       <View style={styles.bookCoverFrame}>
         <AppImage
@@ -246,6 +278,39 @@ function BookshelfStoryItem({
         {story.ageGroup} · {story.pageCount} стор.
       </AppText>
     </Pressable>
+  );
+}
+
+type FilteredShelfEmptyProps = {
+  styles: ReturnType<typeof createStyles>;
+  onShowAll: () => void;
+};
+
+function FilteredShelfEmpty({ styles, onShowAll }: FilteredShelfEmptyProps) {
+  const { theme } = useAppTheme();
+
+  return (
+    <View style={styles.shelfEmpty}>
+      <AppText variant="body" color="secondary" style={styles.shelfEmptyTitle}>
+        На цій поличці поки тихо
+      </AppText>
+      <AppText variant="body" color="muted" style={styles.shelfEmptyMessage}>
+        Спробуйте інший вік — або поверніться до всіх казок на полиці.
+      </AppText>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Усі казки"
+        onPress={onShowAll}
+        style={({ pressed }) => [
+          styles.shelfEmptyAction,
+          pressed && { opacity: theme.opacity.pressed },
+        ]}
+      >
+        <AppText variant="caption" color="secondary" style={styles.shelfEmptyActionLabel}>
+          Усі казки
+        </AppText>
+      </Pressable>
+    </View>
   );
 }
 
@@ -414,19 +479,77 @@ function createStyles(theme: AppTheme) {
       opacity: 0.62,
       lineHeight: theme.typography.caption.lineHeight + 2,
     },
+    bookshelfSection: {
+      gap: theme.spacing.space_2,
+    },
+    shelfSurface: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.radius_lg,
+      paddingTop: theme.spacing.space_5,
+      paddingHorizontal: theme.spacing.space_4,
+      paddingBottom: theme.spacing.space_4,
+    },
+    shelfBase: {
+      marginTop: theme.spacing.space_4,
+      height: theme.spacing.space_2,
+      borderRadius: theme.radius.radius_sm,
+      backgroundColor: theme.colors.surfaceMuted,
+    },
     catalog: {
+      gap: theme.spacing.space_2,
+    },
+    shelfRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
       justifyContent: 'space-between',
-      rowGap: theme.spacing.space_8,
-      paddingTop: theme.spacing.space_1,
+      width: '100%',
+    },
+    shelfRowSpaced: {
+      paddingBottom: theme.spacing.space_6,
+      marginBottom: theme.spacing.space_2,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.divider,
+    },
+    shelfEmpty: {
+      alignItems: 'center',
+      paddingVertical: theme.spacing.space_10,
+      paddingHorizontal: theme.spacing.space_4,
+      gap: theme.spacing.space_3,
+    },
+    shelfEmptyTitle: {
+      textAlign: 'center',
+      opacity: 0.88,
+    },
+    shelfEmptyMessage: {
+      textAlign: 'center',
+      opacity: 0.62,
+      lineHeight: theme.typography.body.lineHeight + 2,
+      maxWidth: 280,
+    },
+    shelfEmptyAction: {
+      marginTop: theme.spacing.space_2,
+      minHeight: 44,
+      paddingHorizontal: theme.spacing.space_4,
+      paddingVertical: theme.spacing.space_2,
+      justifyContent: 'center',
+    },
+    shelfEmptyActionLabel: {
+      opacity: 0.78,
+      letterSpacing: 0.2,
+    },
+    catalogEmptyScreen: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: theme.layout.screenPadding,
+      paddingVertical: theme.spacing.space_16,
     },
     bookItem: {
       flexGrow: 0,
       flexShrink: 0,
+      padding: theme.spacing.space_2,
+      borderRadius: theme.radius.radius_md,
     },
     bookItemPressed: {
-      opacity: theme.opacity.pressed,
+      backgroundColor: theme.colors.surfaceMuted,
     },
     bookCoverFrame: {
       backgroundColor: theme.colors.surfaceMuted,
