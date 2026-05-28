@@ -11,7 +11,6 @@ import {
 } from '../../features/app/services/appHydrationService';
 import { getLastReaderSession } from '../../features/reader';
 import {
-  AppCard,
   AppChip,
   AppEmptyState,
   AppImage,
@@ -19,7 +18,6 @@ import {
   AppScreen,
   AppText,
 } from '../../components/ui';
-import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
 import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
 import {
   getStories,
@@ -39,6 +37,11 @@ const AGE_FILTERS: { id: AgeFilter; label: string }[] = [
   { id: '5+', label: '5+' },
   { id: '6+', label: '6+' },
 ];
+
+/** Mobile bookshelf columns; increase when tablet layout is added. */
+const BOOKSHELF_COLUMN_COUNT = 2;
+
+const bookColumnBasisPercent = `${Math.floor(100 / BOOKSHELF_COLUMN_COUNT - 3)}%`;
 
 export function HomeScreen({ navigation }: Props) {
   const { theme } = useAppTheme();
@@ -117,8 +120,10 @@ export function HomeScreen({ navigation }: Props) {
       >
         <View style={styles.topBar}>
           <View style={styles.header}>
-            <AppText variant="h1">Читайко</AppText>
-            <AppText variant="body" color="secondary">
+            <AppText variant="h1" style={styles.brandTitle}>
+              Читайко
+            </AppText>
+            <AppText variant="body" color="secondary" style={styles.brandSubtitle}>
               Казки для спокійного читання
             </AppText>
           </View>
@@ -141,7 +146,7 @@ export function HomeScreen({ navigation }: Props) {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chipRow}
+          contentContainerStyle={styles.filterRow}
         >
           {AGE_FILTERS.map((chip) => (
             <AppChip
@@ -154,27 +159,16 @@ export function HomeScreen({ navigation }: Props) {
         </ScrollView>
 
         {continueReading ? (
-          <AppCard
-            style={styles.continueCard}
+          <ContinueReadingInvite
+            story={continueReading.story}
+            page={continueReading.page}
+            styles={styles}
             onPress={() =>
               navigation.navigate('Reader', {
                 storyId: continueReading.story.id,
               })
             }
-          >
-            <AppText variant="h3">Повернемось до казки?</AppText>
-            <AppText
-              variant="body"
-              color="secondary"
-              numberOfLines={2}
-              style={styles.continueTitle}
-            >
-              {continueReading.story.title}
-            </AppText>
-            <AppText variant="caption" color="muted">
-              Сторінка {continueReading.page}
-            </AppText>
-          </AppCard>
+          />
         ) : null}
 
         {!isOnline ? (
@@ -193,9 +187,10 @@ export function HomeScreen({ navigation }: Props) {
         ) : (
           <View style={styles.catalog}>
             {visibleStories.map((story) => (
-              <StoryCatalogCard
+              <BookshelfStoryItem
                 key={story.id}
                 story={story}
+                columnBasis={bookColumnBasisPercent}
                 styles={styles}
                 onPress={() =>
                   navigation.navigate('StoryDetails', { storyId: story.id })
@@ -209,37 +204,91 @@ export function HomeScreen({ navigation }: Props) {
   );
 }
 
-type StoryCatalogCardProps = {
+type BookshelfStoryItemProps = {
   story: Story;
+  columnBasis: string;
   styles: ReturnType<typeof createStyles>;
   onPress: () => void;
 };
 
-function StoryCatalogCard({ story, styles, onPress }: StoryCatalogCardProps) {
-  const categoryLabel = STORY_CATEGORY_LABELS[story.category];
+function BookshelfStoryItem({
+  story,
+  columnBasis,
+  styles,
+  onPress,
+}: BookshelfStoryItemProps) {
   const coverImage = useStoryImageSource(story.coverImage);
 
   return (
-    <AppCard onPress={onPress} style={styles.storyCard}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={story.title}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.bookItem,
+        { flexBasis: columnBasis, maxWidth: columnBasis },
+        pressed && styles.bookItemPressed,
+      ]}
+    >
       <AppImage
         source={coverImage.source}
         fallbackLabel="Обкладинка"
-        height={56}
-        style={styles.cardCover}
+        aspectRatio={3 / 4}
+        style={styles.bookCover}
       />
-      <AppText variant="h3">{story.title}</AppText>
-      <AppText
-        variant="caption"
-        color="secondary"
-        numberOfLines={2}
-        style={styles.cardDescription}
-      >
-        {story.description}
+      <AppText variant="body" numberOfLines={2} style={styles.bookTitle}>
+        {story.title}
       </AppText>
-      <AppText variant="caption" color="muted" style={[styles.cardMeta, styles.cardMetaSoft]}>
-        {story.ageGroup} · {categoryLabel} · {story.pageCount} стор.
+      <AppText variant="caption" color="muted" numberOfLines={1} style={styles.bookMeta}>
+        {story.ageGroup} · {story.pageCount} стор.
       </AppText>
-    </AppCard>
+    </Pressable>
+  );
+}
+
+type ContinueReadingInviteProps = {
+  story: Story;
+  page: number;
+  styles: ReturnType<typeof createStyles>;
+  onPress: () => void;
+};
+
+function ContinueReadingInvite({
+  story,
+  page,
+  styles,
+  onPress,
+}: ContinueReadingInviteProps) {
+  const coverImage = useStoryImageSource(story.coverImage);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Повернемось до казки ${story.title}`}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.continueInvite,
+        pressed && styles.continueInvitePressed,
+      ]}
+    >
+      <AppImage
+        source={coverImage.source}
+        fallbackLabel="Обкладинка"
+        aspectRatio={3 / 4}
+        style={styles.continueCover}
+      />
+      <View style={styles.continueBody}>
+        <AppText variant="caption" color="muted" style={styles.continuePrompt}>
+          Повернемось до казки?
+        </AppText>
+        <AppText variant="body" numberOfLines={2} style={styles.continueStoryTitle}>
+          {story.title}
+        </AppText>
+        <AppText variant="caption" color="muted" style={styles.continuePage}>
+          Сторінка {page}
+        </AppText>
+      </View>
+    </Pressable>
   );
 }
 
@@ -255,12 +304,8 @@ function HeaderActionButton({ label, onPress }: HeaderActionButtonProps) {
       StyleSheet.create({
         button: {
           minHeight: 44,
-          paddingVertical: theme.spacing.space_2,
-          paddingHorizontal: theme.spacing.space_3,
-          borderRadius: theme.radius.radius_md,
-          backgroundColor: theme.colors.surface,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
+          paddingVertical: theme.spacing.space_1,
+          paddingHorizontal: theme.spacing.space_2,
           justifyContent: 'center',
           alignItems: 'center',
         },
@@ -278,7 +323,7 @@ function HeaderActionButton({ label, onPress }: HeaderActionButtonProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <AppText variant="caption" color="secondary">
+      <AppText variant="caption" color="muted" style={{ opacity: 0.82 }}>
         {label}
       </AppText>
     </Pressable>
@@ -291,57 +336,89 @@ function createStyles(theme: AppTheme) {
       paddingHorizontal: theme.layout.screenPadding,
       paddingTop: theme.spacing.space_4,
       paddingBottom: theme.spacing.space_16,
-      gap: theme.layout.sectionGap,
+      gap: theme.spacing.space_6,
     },
     topBar: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
-      gap: theme.spacing.space_4,
+      gap: theme.spacing.space_3,
     },
     header: {
       flex: 1,
-      gap: theme.spacing.space_2,
+      gap: theme.spacing.space_1,
+    },
+    brandTitle: {
+      fontWeight: '600',
+    },
+    brandSubtitle: {
+      opacity: 0.78,
     },
     headerActions: {
-      gap: theme.spacing.space_2,
+      gap: theme.spacing.space_1,
       alignItems: 'flex-end',
+      paddingTop: theme.spacing.space_1,
     },
-    chipRow: {
+    filterRow: {
       gap: theme.spacing.space_2,
       paddingRight: theme.layout.screenPadding,
-      opacity: 0.88,
+      opacity: 0.72,
     },
-    continueCard: {
-      backgroundColor: theme.colors.surfaceMuted,
-      ...theme.shadows.shadow_none,
+    continueInvite: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.space_3,
+      paddingVertical: theme.spacing.space_2,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.divider,
     },
-    continueTitle: {
-      marginTop: theme.spacing.space_3,
+    continueInvitePressed: {
+      opacity: theme.opacity.pressed,
+    },
+    continueCover: {
+      width: 56,
+      borderRadius: theme.radius.radius_sm,
+    },
+    continueBody: {
+      flex: 1,
+      gap: theme.spacing.space_1,
+    },
+    continuePrompt: {
+      opacity: 0.72,
+    },
+    continueStoryTitle: {
+      fontWeight: '500',
+    },
+    continuePage: {
+      opacity: 0.7,
     },
     offlineNote: {
-      marginTop: theme.spacing.space_1,
+      opacity: 0.8,
     },
     catalog: {
-      gap: theme.spacing.space_3,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      rowGap: theme.spacing.space_5,
     },
-    storyCard: {
-      backgroundColor: theme.colors.surfaceMuted,
-      ...theme.shadows.shadow_none,
+    bookItem: {
+      flexGrow: 0,
+      flexShrink: 0,
     },
-    cardCover: {
+    bookItemPressed: {
+      opacity: theme.opacity.pressed,
+    },
+    bookCover: {
+      width: '100%',
       marginBottom: theme.spacing.space_2,
-      width: '92%',
-      alignSelf: 'center',
+      borderRadius: theme.radius.radius_sm,
     },
-    cardDescription: {
-      marginTop: theme.spacing.space_2,
+    bookTitle: {
+      fontWeight: '500',
+      marginBottom: theme.spacing.space_1,
     },
-    cardMeta: {
-      marginTop: theme.spacing.space_2,
-    },
-    cardMetaSoft: {
-      opacity: 0.8,
+    bookMeta: {
+      opacity: 0.72,
     },
   });
 }
