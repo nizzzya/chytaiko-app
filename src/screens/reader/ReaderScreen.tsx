@@ -229,10 +229,7 @@ function ReaderContent({
       <View
         style={[
           styles.container,
-          {
-            paddingTop: theme.spacing.space_2,
-            paddingBottom: modePresentation.containerPaddingBottom,
-          },
+          { paddingBottom: modePresentation.containerPaddingBottom },
         ]}
       >
         <View
@@ -253,14 +250,15 @@ function ReaderContent({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Режим читання"
+            hitSlop={8}
             onPress={() => setIsSettingsOpen(true)}
             style={({ pressed }) => [
-              styles.readerSettingsPressable,
-              pressed && styles.readerSettingsPressed,
+              styles.readerSettingsTrigger,
+              pressed && styles.readerSettingsTriggerPressed,
             ]}
           >
-            <AppText variant="caption" color="muted">
-              Режим читання
+            <AppText variant="caption" color="muted" style={styles.settingsTriggerLabel}>
+              Aa
             </AppText>
           </Pressable>
         </View>
@@ -275,9 +273,10 @@ function ReaderContent({
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {pages.map((page) => (
+          {pages.map((page, index) => (
             <ReaderFlowSection
               key={page.id}
+              isFirst={index === 0}
               page={page}
               pageImageHeight={pageImageHeight}
               shouldShowIllustrations={shouldShowIllustrations}
@@ -379,6 +378,7 @@ function ReaderContent({
 
 type ReaderFlowSectionProps = {
   page: StoryPage;
+  isFirst: boolean;
   pageImageHeight: number;
   shouldShowIllustrations: boolean;
   shouldPrioritizeText: boolean;
@@ -390,6 +390,7 @@ type ReaderFlowSectionProps = {
 
 function ReaderFlowSection({
   page,
+  isFirst,
   pageImageHeight,
   shouldShowIllustrations,
   shouldPrioritizeText,
@@ -401,7 +402,7 @@ function ReaderFlowSection({
   const pageImage = useStoryImageSource(page.imageUrl);
 
   return (
-    <View style={styles.flowSection}>
+    <View style={[styles.flowSection, isFirst && styles.flowSectionFirst]}>
       {shouldShowIllustrations ? (
         <AppImage
           source={pageImage.source}
@@ -411,6 +412,7 @@ function ReaderFlowSection({
           collapseWhenUnavailable={pageImage.type === 'missing'}
           style={[
             styles.pageImageBleed,
+            isFirst && styles.pageImageBleedFirst,
             { maxHeight: pageImageHeight },
             isTablet && styles.pageImageBleedTablet,
           ]}
@@ -420,6 +422,7 @@ function ReaderFlowSection({
       <View
         style={[
           styles.textBlock,
+          isFirst && styles.textBlockFirst,
           shouldPrioritizeText && styles.textBlockPhone,
           {
             maxWidth: textMaxWidth,
@@ -444,22 +447,38 @@ function createStyles(theme: AppTheme) {
       flex: 1,
     },
     readerChrome: {
-      gap: theme.spacing.space_1,
-      marginBottom: theme.spacing.space_2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.space_2,
+      minHeight: 18,
+      paddingTop: 0,
+      marginBottom: 0,
     },
     storyTitle: {
+      flex: 1,
       textAlign: 'left',
-      opacity: 0.42,
+      fontSize: 11,
+      lineHeight: 14,
+      opacity: 0.28,
     },
-    readerSettingsPressable: {
-      alignSelf: 'flex-start',
-      minHeight: 28,
+    readerSettingsTrigger: {
       justifyContent: 'center',
-      paddingVertical: theme.spacing.space_1,
-      opacity: 0.72,
+      alignItems: 'center',
+      minWidth: 28,
+      minHeight: 28,
+      paddingHorizontal: theme.spacing.space_1,
+      opacity: 0.34,
     },
-    readerSettingsPressed: {
-      opacity: theme.opacity.pressed,
+    readerSettingsTriggerPressed: {
+      opacity: theme.opacity.overlaySoft,
+    },
+    settingsTriggerLabel: {
+      fontSize: 12,
+      lineHeight: 14,
+      fontWeight: '500',
+      letterSpacing: 0.4,
+      opacity: 1,
     },
     settingsOverlay: {
       flex: 1,
@@ -509,12 +528,18 @@ function createStyles(theme: AppTheme) {
     flowSection: {
       marginBottom: theme.spacing.space_8,
     },
+    flowSectionFirst: {
+      marginTop: 0,
+    },
     pageImageBleed: {
       width: '100%',
       alignSelf: 'stretch',
       marginBottom: theme.spacing.space_3,
       borderRadius: 0,
       backgroundColor: 'transparent',
+    },
+    pageImageBleedFirst: {
+      marginTop: 0,
     },
     pageImageBleedTablet: {
       marginBottom: theme.spacing.space_4,
@@ -524,6 +549,9 @@ function createStyles(theme: AppTheme) {
       alignSelf: 'center',
       paddingVertical: theme.spacing.space_2,
       marginBottom: theme.spacing.space_2,
+    },
+    textBlockFirst: {
+      paddingTop: 0,
     },
     textBlockPhone: {
       flexGrow: 1,
@@ -535,21 +563,21 @@ function createStyles(theme: AppTheme) {
       lineHeight: theme.typography.reader.lineHeight + 6,
     },
     completionSection: {
-      marginTop: theme.spacing.space_4,
+      marginTop: theme.spacing.space_6,
       gap: theme.spacing.space_2,
       alignItems: 'center',
       paddingHorizontal: theme.spacing.space_4,
     },
     completionNote: {
       textAlign: 'center',
-      opacity: 0.64,
+      opacity: 0.52,
     },
     backToStoryButton: {
       alignSelf: 'center',
-      minHeight: 36,
+      minHeight: 32,
       paddingVertical: theme.spacing.space_1,
-      paddingHorizontal: theme.spacing.space_4,
-      opacity: 0.9,
+      paddingHorizontal: theme.spacing.space_3,
+      opacity: 0.78,
     },
   });
 }

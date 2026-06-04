@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import {
-  AppCard,
   AppEmptyState,
+  AppImage,
   AppLoadingState,
   AppScreen,
   AppText,
@@ -16,7 +16,7 @@ import {
 } from '../../features/app/services/appHydrationService';
 import { getLibraryData } from '../../features/library';
 import type { LibraryContinueReading } from '../../features/library';
-import { STORY_CATEGORY_LABELS } from '../../features/stories/constants';
+import { useStoryImageSource } from '../../features/stories/hooks/useStoryImageSource';
 import { getStoryById } from '../../features/stories/services/storiesService';
 import type { RootStackParamList } from '../../navigation/types';
 import type { ReadingProgress } from '../../types/readingProgress';
@@ -131,13 +131,15 @@ export function LibraryScreen({ navigation }: Props) {
 
   if (showEmpty) {
     return (
-      <AppScreen>
-        <AppEmptyState
-          title="Бібліотека порожня"
-          message="Почніть читати казку — тут з’являться продовження, обране та історія."
-          actionLabel="До каталогу"
-          onAction={() => navigation.navigate('Home')}
-        />
+      <AppScreen padded={false}>
+        <View style={styles.emptyScreen}>
+          <AppEmptyState
+            title="Полички поки порожні"
+            message="Почніть читати казку — тут з’являться продовження, обране та історія."
+            actionLabel="До каталогу"
+            onAction={() => navigation.navigate('Home')}
+          />
+        </View>
       </AppScreen>
     );
   }
@@ -149,41 +151,33 @@ export function LibraryScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <AppText variant="h1">Моя бібліотека</AppText>
-          <AppText variant="body" color="secondary">
+          <AppText variant="h1" style={styles.headerTitle}>
+            Моя бібліотека
+          </AppText>
+          <AppText variant="body" color="secondary" style={styles.headerSubtitle}>
             Продовження, обране та спокійні ритуали читання
           </AppText>
         </View>
 
         {libraryView.continueReading ? (
           <LibrarySection title="Продовжити">
-            <AppCard
+            <LibraryContinueRow
+              story={libraryView.continueReading.story}
+              page={libraryView.continueReading.session.lastOpenedPage}
+              styles={styles}
               onPress={() =>
                 navigation.navigate('Reader', {
                   storyId: libraryView.continueReading!.story.id,
                 })
               }
-            >
-              <AppText variant="h3">{libraryView.continueReading.story.title}</AppText>
-              <AppText
-                variant="body"
-                color="secondary"
-                numberOfLines={2}
-                style={styles.cardDescription}
-              >
-                {libraryView.continueReading.story.description}
-              </AppText>
-              <AppText variant="caption" color="muted" style={styles.cardMeta}>
-                Сторінка {libraryView.continueReading.session.lastOpenedPage}
-              </AppText>
-            </AppCard>
+            />
           </LibrarySection>
         ) : null}
 
         {libraryView.favorites.length > 0 ? (
           <LibrarySection title="Улюблені">
             {libraryView.favorites.map((story) => (
-              <LibraryStoryCard
+              <LibraryStoryRow
                 key={`favorite-${story.id}`}
                 story={story}
                 styles={styles}
@@ -198,7 +192,7 @@ export function LibraryScreen({ navigation }: Props) {
         {libraryView.nightReading.length > 0 ? (
           <LibrarySection title="На ніч">
             {libraryView.nightReading.map((story) => (
-              <LibraryStoryCard
+              <LibraryStoryRow
                 key={`night-${story.id}`}
                 story={story}
                 styles={styles}
@@ -213,7 +207,7 @@ export function LibraryScreen({ navigation }: Props) {
         {libraryView.dayReading.length > 0 ? (
           <LibrarySection title="Денне читання">
             {libraryView.dayReading.map((story) => (
-              <LibraryStoryCard
+              <LibraryStoryRow
                 key={`day-${story.id}`}
                 story={story}
                 styles={styles}
@@ -228,7 +222,7 @@ export function LibraryScreen({ navigation }: Props) {
         {libraryView.readTogether.length > 0 ? (
           <LibrarySection title="Читаємо разом">
             {libraryView.readTogether.map((story) => (
-              <LibraryStoryCard
+              <LibraryStoryRow
                 key={`together-${story.id}`}
                 story={story}
                 styles={styles}
@@ -243,13 +237,13 @@ export function LibraryScreen({ navigation }: Props) {
         {libraryView.history.length > 0 ? (
           <LibrarySection title="Історія">
             {libraryView.history.map(({ story, progress }) => (
-              <LibraryStoryCard
+              <LibraryStoryRow
                 key={`history-${story.id}`}
                 story={story}
                 styles={styles}
                 meta={
                   progress.completed
-                    ? 'Прочитано'
+                    ? 'Прочитано разом'
                     : `Сторінка ${progress.lastPage}`
                 }
                 onPress={() =>
@@ -277,11 +271,23 @@ function LibrarySection({ title, children }: LibrarySectionProps) {
         section: {
           gap: theme.spacing.space_3,
         },
-        title: {
-          marginBottom: theme.spacing.space_1,
+        sectionTitle: {
+          opacity: 0.58,
+          fontWeight: '500',
+          letterSpacing: 0.2,
         },
-        list: {
-          gap: theme.layout.cardGap,
+        shelfSurface: {
+          backgroundColor: theme.colors.surface,
+          borderRadius: theme.radius.radius_lg,
+          paddingHorizontal: theme.spacing.space_3,
+          paddingVertical: theme.spacing.space_3,
+          gap: theme.spacing.space_2,
+        },
+        shelfBase: {
+          marginTop: theme.spacing.space_2,
+          height: theme.spacing.space_2,
+          borderRadius: theme.radius.radius_sm,
+          backgroundColor: theme.colors.surfaceMuted,
         },
       }),
     [theme],
@@ -289,46 +295,91 @@ function LibrarySection({ title, children }: LibrarySectionProps) {
 
   return (
     <View style={styles.section}>
-      <AppText variant="h3" style={styles.title}>
+      <AppText variant="body" color="secondary" style={styles.sectionTitle}>
         {title}
       </AppText>
-      <View style={styles.list}>{children}</View>
+      <View>
+        <View style={styles.shelfSurface}>{children}</View>
+        <View style={styles.shelfBase} />
+      </View>
     </View>
   );
 }
 
-type LibraryStoryCardProps = {
+type LibraryContinueRowProps = {
+  story: Story;
+  page: number;
+  styles: ReturnType<typeof createStyles>;
+  onPress: () => void;
+};
+
+function LibraryContinueRow({ story, page, styles, onPress }: LibraryContinueRowProps) {
+  const coverImage = useStoryImageSource(story.coverImage);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Продовжити ${story.title}`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.bookRow, pressed && styles.bookRowPressed]}
+    >
+      <View style={styles.bookCoverFrame}>
+        <AppImage
+          source={coverImage.source}
+          fallbackLabel="Обкладинка"
+          aspectRatio={3 / 4}
+          resizeMode="cover"
+          style={styles.bookCover}
+        />
+      </View>
+      <View style={styles.bookBody}>
+        <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>
+          {story.title}
+        </AppText>
+        <AppText variant="caption" color="muted" style={styles.bookMeta}>
+          Сторінка {page}
+        </AppText>
+      </View>
+    </Pressable>
+  );
+}
+
+type LibraryStoryRowProps = {
   story: Story;
   styles: ReturnType<typeof createStyles>;
   meta?: string;
   onPress: () => void;
 };
 
-function LibraryStoryCard({
-  story,
-  styles,
-  meta,
-  onPress,
-}: LibraryStoryCardProps) {
-  const categoryLabel = STORY_CATEGORY_LABELS[story.category];
-  const detailMeta =
-    meta ?? `${story.ageGroup} · ${categoryLabel} · ${story.pageCount} стор.`;
+function LibraryStoryRow({ story, styles, meta, onPress }: LibraryStoryRowProps) {
+  const coverImage = useStoryImageSource(story.coverImage);
+  const detailMeta = meta ?? `${story.ageGroup} · ${story.pageCount} стор.`;
 
   return (
-    <AppCard onPress={onPress}>
-      <AppText variant="h3">{story.title}</AppText>
-      <AppText
-        variant="body"
-        color="secondary"
-        numberOfLines={2}
-        style={styles.cardDescription}
-      >
-        {story.description}
-      </AppText>
-      <AppText variant="caption" color="muted" style={styles.cardMeta}>
-        {detailMeta}
-      </AppText>
-    </AppCard>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={story.title}
+      onPress={onPress}
+      style={({ pressed }) => [styles.bookRow, pressed && styles.bookRowPressed]}
+    >
+      <View style={styles.bookCoverFrame}>
+        <AppImage
+          source={coverImage.source}
+          fallbackLabel="Обкладинка"
+          aspectRatio={3 / 4}
+          resizeMode="cover"
+          style={styles.bookCover}
+        />
+      </View>
+      <View style={styles.bookBody}>
+        <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>
+          {story.title}
+        </AppText>
+        <AppText variant="caption" color="muted" numberOfLines={1} style={styles.bookMeta}>
+          {detailMeta}
+        </AppText>
+      </View>
+    </Pressable>
   );
 }
 
@@ -336,18 +387,62 @@ function createStyles(theme: AppTheme) {
   return StyleSheet.create({
     scroll: {
       paddingHorizontal: theme.layout.screenPadding,
-      paddingTop: theme.spacing.space_4,
+      paddingTop: theme.spacing.space_5,
       paddingBottom: theme.spacing.space_16,
-      gap: theme.layout.sectionGap,
+      gap: theme.spacing.space_8,
     },
     header: {
       gap: theme.spacing.space_2,
+      marginBottom: theme.spacing.space_1,
     },
-    cardDescription: {
-      marginTop: theme.spacing.space_3,
+    headerTitle: {
+      fontWeight: '600',
+      letterSpacing: -0.3,
     },
-    cardMeta: {
-      marginTop: theme.spacing.space_3,
+    headerSubtitle: {
+      opacity: 0.66,
+      lineHeight: theme.typography.body.lineHeight + 2,
+      maxWidth: 300,
+    },
+    emptyScreen: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: theme.layout.screenPadding,
+      paddingVertical: theme.spacing.space_16,
+    },
+    bookRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.space_3,
+      paddingVertical: theme.spacing.space_2,
+      paddingHorizontal: theme.spacing.space_1,
+      borderRadius: theme.radius.radius_md,
+    },
+    bookRowPressed: {
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    bookCoverFrame: {
+      backgroundColor: theme.colors.surfaceMuted,
+      borderRadius: theme.radius.radius_sm,
+      padding: theme.spacing.space_1,
+    },
+    bookCover: {
+      width: 52,
+      borderRadius: theme.radius.radius_sm,
+      backgroundColor: theme.colors.surface,
+    },
+    bookBody: {
+      flex: 1,
+      gap: theme.spacing.space_1,
+      paddingVertical: theme.spacing.space_1,
+    },
+    bookTitle: {
+      fontWeight: '600',
+    },
+    bookMeta: {
+      fontSize: 11,
+      lineHeight: 14,
+      opacity: 0.36,
     },
   });
 }
