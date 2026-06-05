@@ -150,12 +150,17 @@ export function LibraryScreen({ navigation }: Props) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.houseTop}>
+          <View style={styles.roof} />
+          <View style={styles.roofEave} />
+        </View>
+
         <View style={styles.header}>
           <AppText variant="h1" style={styles.headerTitle}>
             Моя бібліотека
           </AppText>
           <AppText variant="body" color="secondary" style={styles.headerSubtitle}>
-            Продовження, обране та спокійні ритуали читання
+            Дім, у якому живуть улюблені казки
           </AppText>
         </View>
 
@@ -272,22 +277,13 @@ function LibrarySection({ title, children }: LibrarySectionProps) {
           gap: theme.spacing.space_3,
         },
         sectionTitle: {
-          opacity: 0.58,
+          opacity: 0.5,
           fontWeight: '500',
-          letterSpacing: 0.2,
+          letterSpacing: 0.3,
+          paddingHorizontal: theme.spacing.space_1,
         },
-        shelfSurface: {
-          backgroundColor: theme.colors.surface,
-          borderRadius: theme.radius.radius_lg,
-          paddingHorizontal: theme.spacing.space_3,
-          paddingVertical: theme.spacing.space_3,
-          gap: theme.spacing.space_2,
-        },
-        shelfBase: {
-          marginTop: theme.spacing.space_2,
-          height: theme.spacing.space_2,
-          borderRadius: theme.radius.radius_sm,
-          backgroundColor: theme.colors.surfaceMuted,
+        niches: {
+          gap: theme.spacing.space_3,
         },
       }),
     [theme],
@@ -295,13 +291,10 @@ function LibrarySection({ title, children }: LibrarySectionProps) {
 
   return (
     <View style={styles.section}>
-      <AppText variant="body" color="secondary" style={styles.sectionTitle}>
+      <AppText variant="caption" color="muted" style={styles.sectionTitle}>
         {title}
       </AppText>
-      <View>
-        <View style={styles.shelfSurface}>{children}</View>
-        <View style={styles.shelfBase} />
-      </View>
+      <View style={styles.niches}>{children}</View>
     </View>
   );
 }
@@ -321,17 +314,15 @@ function LibraryContinueRow({ story, page, styles, onPress }: LibraryContinueRow
       accessibilityRole="button"
       accessibilityLabel={`Продовжити ${story.title}`}
       onPress={onPress}
-      style={({ pressed }) => [styles.bookRow, pressed && styles.bookRowPressed]}
+      style={({ pressed }) => [styles.activeRoom, pressed && styles.nichePressed]}
     >
-      <View style={styles.bookCoverFrame}>
-        <AppImage
-          source={coverImage.source}
-          fallbackLabel="Обкладинка"
-          aspectRatio={3 / 4}
-          resizeMode="cover"
-          style={styles.bookCover}
-        />
-      </View>
+      <AppImage
+        source={coverImage.source}
+        fallbackLabel="Обкладинка"
+        aspectRatio={3 / 4}
+        resizeMode="cover"
+        style={styles.activeRoomCover}
+      />
       <View style={styles.bookBody}>
         <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>
           {story.title}
@@ -360,17 +351,15 @@ function LibraryStoryRow({ story, styles, meta, onPress }: LibraryStoryRowProps)
       accessibilityRole="button"
       accessibilityLabel={story.title}
       onPress={onPress}
-      style={({ pressed }) => [styles.bookRow, pressed && styles.bookRowPressed]}
+      style={({ pressed }) => [styles.niche, pressed && styles.nichePressed]}
     >
-      <View style={styles.bookCoverFrame}>
-        <AppImage
-          source={coverImage.source}
-          fallbackLabel="Обкладинка"
-          aspectRatio={3 / 4}
-          resizeMode="cover"
-          style={styles.bookCover}
-        />
-      </View>
+      <AppImage
+        source={coverImage.source}
+        fallbackLabel="Обкладинка"
+        aspectRatio={3 / 4}
+        resizeMode="cover"
+        style={styles.bookCover}
+      />
       <View style={styles.bookBody}>
         <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>
           {story.title}
@@ -391,18 +380,42 @@ function createStyles(theme: AppTheme) {
       paddingBottom: theme.spacing.space_16,
       gap: theme.spacing.space_8,
     },
+    houseTop: {
+      alignItems: 'center',
+      marginBottom: theme.spacing.space_2,
+    },
+    roof: {
+      width: 0,
+      height: 0,
+      borderLeftWidth: 26,
+      borderRightWidth: 26,
+      borderBottomWidth: 18,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
+      borderBottomColor: theme.colors.border,
+      opacity: 0.5,
+    },
+    roofEave: {
+      width: 72,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: theme.colors.border,
+      opacity: 0.5,
+    },
     header: {
       gap: theme.spacing.space_2,
-      marginBottom: theme.spacing.space_1,
+      marginBottom: theme.spacing.space_2,
+      alignItems: 'center',
     },
     headerTitle: {
       fontWeight: '600',
       letterSpacing: -0.3,
+      textAlign: 'center',
     },
     headerSubtitle: {
       opacity: 0.66,
       lineHeight: theme.typography.body.lineHeight + 2,
       maxWidth: 300,
+      textAlign: 'center',
     },
     emptyScreen: {
       flex: 1,
@@ -410,26 +423,36 @@ function createStyles(theme: AppTheme) {
       paddingHorizontal: theme.layout.screenPadding,
       paddingVertical: theme.spacing.space_16,
     },
-    bookRow: {
+    niche: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.space_3,
-      paddingVertical: theme.spacing.space_2,
-      paddingHorizontal: theme.spacing.space_1,
+      gap: theme.spacing.space_4,
+      padding: theme.spacing.space_3,
+      borderRadius: theme.radius.radius_lg,
+      backgroundColor: theme.colors.surface,
+    },
+    nichePressed: {
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    activeRoom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.space_4,
+      padding: theme.spacing.space_4,
+      borderRadius: theme.radius.radius_lg,
+      backgroundColor: theme.colors.surface,
+    },
+    activeRoomCover: {
+      width: 84,
       borderRadius: theme.radius.radius_md,
-    },
-    bookRowPressed: {
       backgroundColor: theme.colors.surfaceMuted,
-    },
-    bookCoverFrame: {
-      backgroundColor: theme.colors.surfaceMuted,
-      borderRadius: theme.radius.radius_sm,
-      padding: theme.spacing.space_1,
+      ...theme.shadows.shadow_sm,
     },
     bookCover: {
-      width: 52,
-      borderRadius: theme.radius.radius_sm,
-      backgroundColor: theme.colors.surface,
+      width: 56,
+      borderRadius: theme.radius.radius_md,
+      backgroundColor: theme.colors.surfaceMuted,
+      ...theme.shadows.shadow_sm,
     },
     bookBody: {
       flex: 1,
