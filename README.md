@@ -40,6 +40,45 @@ Public reading MVP in progress.
 - [docs/TECHNICAL_PASSPORT.md](docs/TECHNICAL_PASSPORT.md) — product, architecture, data model
 - [docs/DESIGN_CODE.md](docs/DESIGN_CODE.md) — UI/UX and design tokens
 
+## Project Documentation
+
+### TECHNICAL_PASSPORT.md
+
+Technical source of truth.
+
+Contains:
+
+- Architecture
+- Technical decisions
+- Invariants
+- Feature scope
+- Development rules
+
+### PRODUCT_DESIGN_CONSTITUTION.md
+
+Design source of truth.
+
+Contains:
+
+- Product vision
+- UX principles
+- Design system
+- Illustration system
+- Character system
+- Approved screen references
+- Future design governance
+
+### DEPLOYMENT.md
+
+Deployment source of truth.
+
+Contains:
+
+- Environment setup
+- Build process
+- Release process
+- Deployment instructions
+
 ## Development note
 
 Test content only during development. Final stories and illustrations are not part of the current development phase.
