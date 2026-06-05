@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppButton, AppScreen, AppText } from '../../components/ui';
+import type { ThemePreference } from '../../features/app/services/themePreferenceService';
 import { useAuth } from '../../navigation/AuthContext';
 import type { RootStackParamList } from '../../navigation/types';
 import { logout } from '../../services/firebase/authService';
@@ -10,9 +11,15 @@ import { useAppTheme, type AppTheme } from '../../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
+const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
+  { value: 'system', label: 'Як у системі' },
+  { value: 'light', label: 'Світла' },
+  { value: 'dark', label: 'Темна' },
+];
+
 export function ProfileScreen({ navigation }: Props) {
   const { user } = useAuth();
-  const { theme } = useAppTheme();
+  const { theme, preference, setPreference } = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [loading, setLoading] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -53,6 +60,12 @@ export function ProfileScreen({ navigation }: Props) {
             onRegister={() => navigation.navigate('Register')}
           />
         )}
+
+        <ThemeSelector
+          styles={styles}
+          preference={preference}
+          onSelect={setPreference}
+        />
 
         <AppButton
           label="До каталогу"
@@ -134,6 +147,49 @@ function LoggedInContent({
   );
 }
 
+type ThemeSelectorProps = {
+  styles: ReturnType<typeof createStyles>;
+  preference: ThemePreference;
+  onSelect: (preference: ThemePreference) => void;
+};
+
+function ThemeSelector({ styles, preference, onSelect }: ThemeSelectorProps) {
+  return (
+    <View style={styles.themeSection}>
+      <AppText variant="caption" color="muted" style={styles.themeLabel}>
+        Тема
+      </AppText>
+      <View style={styles.themeOptions}>
+        {THEME_OPTIONS.map((option) => {
+          const selected = option.value === preference;
+
+          return (
+            <Pressable
+              key={option.value}
+              onPress={() => onSelect(option.value)}
+              style={({ pressed }) => [
+                styles.themeOption,
+                selected && styles.themeOptionSelected,
+                pressed && styles.themeOptionPressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={option.label}
+              accessibilityState={{ selected }}
+            >
+              <AppText
+                variant="body"
+                color={selected ? 'primary' : 'secondary'}
+              >
+                {option.label}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 function createStyles(theme: AppTheme) {
   return StyleSheet.create({
     scroll: {
@@ -160,6 +216,29 @@ function createStyles(theme: AppTheme) {
     },
     catalogButton: {
       marginTop: theme.spacing.space_10,
+    },
+    themeSection: {
+      marginTop: theme.spacing.space_8,
+      gap: theme.spacing.space_3,
+    },
+    themeLabel: {
+      letterSpacing: 0.3,
+      opacity: 0.7,
+    },
+    themeOptions: {
+      gap: theme.spacing.space_2,
+    },
+    themeOption: {
+      paddingVertical: theme.spacing.space_3,
+      paddingHorizontal: theme.spacing.space_4,
+      borderRadius: theme.radius.radius_md,
+      backgroundColor: theme.colors.surface,
+    },
+    themeOptionSelected: {
+      backgroundColor: theme.colors.primarySoft,
+    },
+    themeOptionPressed: {
+      backgroundColor: theme.colors.surfaceMuted,
     },
   });
 }
