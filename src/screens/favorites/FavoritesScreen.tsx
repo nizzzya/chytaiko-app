@@ -175,7 +175,12 @@ function FavoriteStoryItem({
         />
         <View style={styles.bookBody}>
           <View style={styles.titleRow}>
-            <AppText variant="caption" style={styles.lovedMark}>
+            <AppText
+              variant="caption"
+              style={styles.lovedMark}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
               ♥
             </AppText>
             <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>

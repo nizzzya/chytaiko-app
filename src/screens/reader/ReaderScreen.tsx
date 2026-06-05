@@ -332,6 +332,9 @@ function ReaderContent({
                 return (
                   <Pressable
                     key={option.mode}
+                    accessibilityRole="button"
+                    accessibilityLabel={option.label}
+                    accessibilityState={{ selected: isCurrentMode }}
                     style={({ pressed }) => [
                       styles.settingsItem,
                       isCurrentMode && styles.settingsItemSelected,
@@ -359,6 +362,9 @@ function ReaderContent({
             </View>
 
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Показувати ілюстрації"
+              accessibilityState={{ checked: showIllustrations }}
               style={({ pressed }) => [
                 styles.settingsItem,
                 pressed && styles.settingsItemPressed,
