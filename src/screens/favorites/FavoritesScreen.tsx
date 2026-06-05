@@ -100,8 +100,8 @@ export function FavoritesScreen({ navigation }: Props) {
       <AppScreen padded={false}>
         <View style={styles.emptyScreen}>
           <AppEmptyState
-            title="Обрана поличка порожня"
-            message="Збережіть казки з каталогу — вони з’являться тут."
+            title="Тут живуть улюблені казки"
+            message="Ця поличка чекає на казки, які ви полюбите разом."
             actionLabel="До каталогу"
             onAction={() => navigation.navigate('Home')}
           />
@@ -121,68 +121,67 @@ export function FavoritesScreen({ navigation }: Props) {
             Обране
           </AppText>
           <AppText variant="body" color="secondary" style={styles.headerSubtitle}>
-            Казки, які хочеться зберегти на поличці
+            Казки, до яких хочеться повертатися разом
           </AppText>
         </View>
 
-        <View style={styles.shelfSurface}>
-          {stories.map((story, index) => (
-            <FavoriteStoryRow
+        <View style={styles.collection}>
+          {stories.map((story) => (
+            <FavoriteStoryItem
               key={story.id}
               story={story}
               styles={styles}
-              isLast={index === stories.length - 1}
               onOpen={() =>
                 navigation.navigate('StoryDetails', { storyId: story.id })
               }
               onRemove={() => handleRemove(story.id)}
             />
           ))}
-          <View style={styles.shelfBase} />
         </View>
       </ScrollView>
     </AppScreen>
   );
 }
 
-type FavoriteStoryRowProps = {
+type FavoriteStoryItemProps = {
   story: Story;
   styles: ReturnType<typeof createStyles>;
-  isLast: boolean;
   onOpen: () => void;
   onRemove: () => void;
 };
 
-function FavoriteStoryRow({
+function FavoriteStoryItem({
   story,
   styles,
-  isLast,
   onOpen,
   onRemove,
-}: FavoriteStoryRowProps) {
+}: FavoriteStoryItemProps) {
   const coverImage = useStoryImageSource(story.coverImage);
 
   return (
-    <View style={[styles.bookItem, !isLast && styles.bookItemSpaced]}>
+    <View style={styles.collectionItem}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={story.title}
         onPress={onOpen}
-        style={({ pressed }) => [styles.bookRow, pressed && styles.bookRowPressed]}
+        style={({ pressed }) => [styles.niche, pressed && styles.nichePressed]}
       >
-        <View style={styles.bookCoverFrame}>
-          <AppImage
-            source={coverImage.source}
-            fallbackLabel="Обкладинка"
-            aspectRatio={3 / 4}
-            resizeMode="cover"
-            style={styles.bookCover}
-          />
-        </View>
+        <AppImage
+          source={coverImage.source}
+          fallbackLabel="Обкладинка"
+          aspectRatio={3 / 4}
+          resizeMode="cover"
+          style={styles.bookCover}
+        />
         <View style={styles.bookBody}>
-          <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>
-            {story.title}
-          </AppText>
+          <View style={styles.titleRow}>
+            <AppText variant="caption" style={styles.lovedMark}>
+              ♥
+            </AppText>
+            <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>
+              {story.title}
+            </AppText>
+          </View>
           <AppText variant="caption" color="muted" numberOfLines={1} style={styles.bookMeta}>
             {story.ageGroup} · {story.pageCount} стор.
           </AppText>
@@ -198,7 +197,7 @@ function FavoriteStoryRow({
         ]}
       >
         <AppText variant="caption" color="muted" style={styles.removeActionLabel}>
-          Прибрати з обраної полички
+          Прибрати з колекції
         </AppText>
       </Pressable>
     </View>
@@ -231,54 +230,46 @@ function createStyles(theme: AppTheme) {
       paddingHorizontal: theme.layout.screenPadding,
       paddingVertical: theme.spacing.space_16,
     },
-    shelfSurface: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.radius.radius_lg,
-      paddingHorizontal: theme.spacing.space_3,
-      paddingTop: theme.spacing.space_3,
-      paddingBottom: theme.spacing.space_4,
+    collection: {
+      gap: theme.spacing.space_5,
     },
-    shelfBase: {
-      marginTop: theme.spacing.space_2,
-      height: theme.spacing.space_2,
-      borderRadius: theme.radius.radius_sm,
-      backgroundColor: theme.colors.surfaceMuted,
+    collectionItem: {
+      gap: theme.spacing.space_1,
     },
-    bookItem: {
-      paddingHorizontal: theme.spacing.space_1,
-    },
-    bookItemSpaced: {
-      paddingBottom: theme.spacing.space_4,
-      marginBottom: theme.spacing.space_2,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.colors.divider,
-    },
-    bookRow: {
+    niche: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.space_3,
-      paddingVertical: theme.spacing.space_2,
-      borderRadius: theme.radius.radius_md,
+      gap: theme.spacing.space_4,
+      padding: theme.spacing.space_3,
+      borderRadius: theme.radius.radius_lg,
+      backgroundColor: theme.colors.surface,
     },
-    bookRowPressed: {
+    nichePressed: {
       backgroundColor: theme.colors.surfaceMuted,
-    },
-    bookCoverFrame: {
-      backgroundColor: theme.colors.surfaceMuted,
-      borderRadius: theme.radius.radius_sm,
-      padding: theme.spacing.space_1,
     },
     bookCover: {
-      width: 56,
-      borderRadius: theme.radius.radius_sm,
-      backgroundColor: theme.colors.surface,
+      width: 64,
+      borderRadius: theme.radius.radius_md,
+      backgroundColor: theme.colors.surfaceMuted,
+      ...theme.shadows.shadow_sm,
     },
     bookBody: {
       flex: 1,
       gap: theme.spacing.space_1,
       paddingVertical: theme.spacing.space_1,
     },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: theme.spacing.space_2,
+    },
+    lovedMark: {
+      color: theme.colors.primary,
+      opacity: 0.55,
+      lineHeight: theme.typography.bodyLarge.lineHeight,
+    },
     bookTitle: {
+      flex: 1,
       fontWeight: '600',
     },
     bookMeta: {
@@ -289,8 +280,7 @@ function createStyles(theme: AppTheme) {
     removeAction: {
       alignSelf: 'flex-start',
       minHeight: 36,
-      marginTop: theme.spacing.space_1,
-      marginLeft: theme.spacing.space_1,
+      marginLeft: theme.spacing.space_3,
       paddingHorizontal: theme.spacing.space_2,
       paddingVertical: theme.spacing.space_1,
       justifyContent: 'center',
@@ -299,7 +289,7 @@ function createStyles(theme: AppTheme) {
       opacity: theme.opacity.pressed,
     },
     removeActionLabel: {
-      opacity: 0.52,
+      opacity: 0.5,
       letterSpacing: 0.15,
     },
   });

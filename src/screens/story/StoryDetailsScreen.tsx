@@ -35,7 +35,7 @@ function getReadButtonLabel(progress: ReadingProgress | null): string {
     return 'Продовжити читання';
   }
 
-  return 'Читати';
+  return 'Читати казку';
 }
 
 export function StoryDetailsScreen({ navigation, route }: Props) {
@@ -204,37 +204,38 @@ function createStyles(theme: AppTheme) {
       paddingBottom: theme.spacing.space_16,
     },
     coverSection: {
-      paddingTop: theme.spacing.space_5,
+      paddingTop: theme.spacing.space_6,
       paddingHorizontal: theme.layout.screenPadding,
       alignItems: 'center',
     },
     coverFrame: {
-      width: '54%',
-      maxWidth: 220,
-      backgroundColor: theme.colors.surfaceMuted,
-      borderRadius: theme.radius.radius_md,
-      padding: theme.spacing.space_2,
+      width: '64%',
+      maxWidth: 260,
+      borderRadius: theme.radius.radius_lg,
+      ...theme.shadows.shadow_sm,
     },
     coverImage: {
       width: '100%',
-      borderRadius: theme.radius.radius_sm,
-      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.radius_lg,
+      backgroundColor: theme.colors.surfaceMuted,
     },
     content: {
       paddingHorizontal: theme.layout.screenPadding,
-      paddingTop: theme.spacing.space_6,
+      paddingTop: theme.spacing.space_8,
       gap: theme.spacing.space_3,
     },
     title: {
       fontWeight: '600',
       letterSpacing: -0.3,
       lineHeight: theme.typography.h1.lineHeight,
+      textAlign: 'center',
     },
     meta: {
       fontSize: 11,
       lineHeight: 14,
       opacity: 0.36,
       letterSpacing: 0.2,
+      textAlign: 'center',
     },
     statusNotes: {
       marginTop: theme.spacing.space_2,
@@ -242,10 +243,11 @@ function createStyles(theme: AppTheme) {
     },
     statusNote: {
       opacity: 0.62,
+      textAlign: 'center',
       lineHeight: theme.typography.caption.lineHeight + 4,
     },
     description: {
-      marginTop: theme.spacing.space_4,
+      marginTop: theme.spacing.space_6,
       lineHeight: theme.typography.bodyLarge.lineHeight + 6,
       opacity: 0.82,
     },

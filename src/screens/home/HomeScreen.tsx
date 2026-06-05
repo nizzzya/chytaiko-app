@@ -201,14 +201,8 @@ export function HomeScreen({ navigation }: Props) {
             <View style={styles.shelfSurface}>
               <View style={styles.catalog}>
                 {chunkStoriesForShelf(visibleStories, BOOKSHELF_COLUMN_COUNT).map(
-                  (row, rowIndex, rows) => (
-                    <View
-                      key={`shelf-row-${rowIndex}`}
-                      style={[
-                        styles.shelfRow,
-                        rowIndex < rows.length - 1 && styles.shelfRowSpaced,
-                      ]}
-                    >
+                  (row, rowIndex) => (
+                    <View key={`shelf-row-${rowIndex}`} style={styles.shelfRow}>
                       {row.map((story) => (
                         <BookshelfStoryItem
                           key={story.id}
@@ -262,15 +256,13 @@ function BookshelfStoryItem({
       ]}
 
     >
-      <View style={styles.bookCoverFrame}>
-        <AppImage
-          source={coverImage.source}
-          fallbackLabel="Обкладинка"
-          aspectRatio={3 / 4}
-          resizeMode="cover"
-          style={styles.bookCover}
-        />
-      </View>
+      <AppImage
+        source={coverImage.source}
+        fallbackLabel="Обкладинка"
+        aspectRatio={3 / 4}
+        resizeMode="cover"
+        style={styles.bookCover}
+      />
       <AppText variant="bodyLarge" numberOfLines={2} style={styles.bookTitle}>
         {story.title}
       </AppText>
@@ -339,15 +331,13 @@ function ContinueReadingInvite({
         pressed && styles.continueInvitePressed,
       ]}
     >
-      <View style={styles.continueCoverFrame}>
-        <AppImage
-          source={coverImage.source}
-          fallbackLabel="Обкладинка"
-          aspectRatio={3 / 4}
-          resizeMode="cover"
-          style={styles.continueCover}
-        />
-      </View>
+      <AppImage
+        source={coverImage.source}
+        fallbackLabel="Обкладинка"
+        aspectRatio={3 / 4}
+        resizeMode="cover"
+        style={styles.continueCover}
+      />
       <View style={styles.continueBody}>
         <AppText variant="caption" color="secondary" style={styles.continuePrompt}>
           Повернемось до казки?
@@ -446,15 +436,11 @@ function createStyles(theme: AppTheme) {
     continueInvitePressed: {
       opacity: theme.opacity.pressed,
     },
-    continueCoverFrame: {
-      backgroundColor: theme.colors.surfaceMuted,
-      borderRadius: theme.radius.radius_md,
-      padding: theme.spacing.space_2,
-    },
     continueCover: {
       width: 64,
-      borderRadius: theme.radius.radius_sm,
-      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.radius_md,
+      backgroundColor: theme.colors.surfaceMuted,
+      ...theme.shadows.shadow_sm,
     },
     continueBody: {
       flex: 1,
@@ -496,18 +482,12 @@ function createStyles(theme: AppTheme) {
       backgroundColor: theme.colors.surfaceMuted,
     },
     catalog: {
-      gap: theme.spacing.space_2,
+      gap: theme.spacing.space_8,
     },
     shelfRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       width: '100%',
-    },
-    shelfRowSpaced: {
-      paddingBottom: theme.spacing.space_6,
-      marginBottom: theme.spacing.space_2,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.colors.divider,
     },
     shelfEmpty: {
       alignItems: 'center',
@@ -551,27 +531,21 @@ function createStyles(theme: AppTheme) {
     bookItemPressed: {
       backgroundColor: theme.colors.surfaceMuted,
     },
-    bookCoverFrame: {
-      backgroundColor: theme.colors.surfaceMuted,
-      borderRadius: theme.radius.radius_md,
-      padding: theme.spacing.space_2,
-      marginBottom: theme.spacing.space_3,
-    },
     bookCover: {
       width: '100%',
-      borderRadius: theme.radius.radius_sm,
-      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.radius_md,
+      backgroundColor: theme.colors.surfaceMuted,
+      marginBottom: theme.spacing.space_3,
+      ...theme.shadows.shadow_sm,
     },
     bookTitle: {
       fontWeight: '600',
       marginBottom: theme.spacing.space_2,
-      paddingHorizontal: theme.spacing.space_1,
     },
     bookMeta: {
       fontSize: 11,
       lineHeight: 14,
       opacity: 0.34,
-      paddingHorizontal: theme.spacing.space_1,
     },
   });
 }
