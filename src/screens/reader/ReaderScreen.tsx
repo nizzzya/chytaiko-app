@@ -289,15 +289,25 @@ function ReaderContent({
           ))}
 
           <View style={styles.completionSection}>
+            <AppText variant="caption" color="muted" style={styles.completionFlourish}>
+              * * *
+            </AppText>
             <AppText variant="body" color="secondary" style={styles.completionNote}>
               {isCompleted ? 'Казку прочитано.' : 'Дякуємо за спокійне читання разом.'}
             </AppText>
-            <AppButton
-              label="Повернутись до казки"
-              variant="secondary"
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Повернутись до казки"
               onPress={handleReturnToStory}
-              style={styles.backToStoryButton}
-            />
+              style={({ pressed }) => [
+                styles.backToStoryLink,
+                pressed && styles.backToStoryLinkPressed,
+              ]}
+            >
+              <AppText variant="caption" color="muted" style={styles.backToStoryLinkLabel}>
+                Повернутись до казки
+              </AppText>
+            </Pressable>
           </View>
         </ScrollView>
       </View>
@@ -322,6 +332,9 @@ function ReaderContent({
                 return (
                   <Pressable
                     key={option.mode}
+                    accessibilityRole="button"
+                    accessibilityLabel={option.label}
+                    accessibilityState={{ selected: isCurrentMode }}
                     style={({ pressed }) => [
                       styles.settingsItem,
                       isCurrentMode && styles.settingsItemSelected,
@@ -349,6 +362,9 @@ function ReaderContent({
             </View>
 
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Показувати ілюстрації"
+              accessibilityState={{ checked: showIllustrations }}
               style={({ pressed }) => [
                 styles.settingsItem,
                 pressed && styles.settingsItemPressed,
@@ -430,9 +446,18 @@ function ReaderFlowSection({
           },
         ]}
       >
-        <AppText variant="reader" style={styles.pageText}>
-          {page.text}
-        </AppText>
+        {isFirst && page.text.length > 1 ? (
+          <AppText variant="reader" style={styles.pageText}>
+            <AppText variant="reader" style={styles.dropCap}>
+              {page.text.slice(0, 1)}
+            </AppText>
+            {page.text.slice(1)}
+          </AppText>
+        ) : (
+          <AppText variant="reader" style={styles.pageText}>
+            {page.text}
+          </AppText>
+        )}
       </View>
     </View>
   );
@@ -560,24 +585,42 @@ function createStyles(theme: AppTheme) {
       color: theme.colors.textPrimary,
       width: '100%',
       textAlign: 'left',
-      lineHeight: theme.typography.reader.lineHeight + 6,
+      lineHeight: theme.typography.reader.lineHeight + 8,
+    },
+    dropCap: {
+      color: theme.colors.primary,
+      fontSize: theme.typography.reader.fontSize * 2,
+      lineHeight: theme.typography.reader.lineHeight + 8,
+      fontWeight: '600',
     },
     completionSection: {
-      marginTop: theme.spacing.space_6,
-      gap: theme.spacing.space_2,
+      marginTop: theme.spacing.space_8,
+      gap: theme.spacing.space_4,
       alignItems: 'center',
       paddingHorizontal: theme.spacing.space_4,
+    },
+    completionFlourish: {
+      textAlign: 'center',
+      opacity: 0.32,
+      letterSpacing: 4,
     },
     completionNote: {
       textAlign: 'center',
       opacity: 0.52,
     },
-    backToStoryButton: {
+    backToStoryLink: {
       alignSelf: 'center',
-      minHeight: 32,
+      minHeight: 44,
+      justifyContent: 'center',
       paddingVertical: theme.spacing.space_1,
       paddingHorizontal: theme.spacing.space_3,
-      opacity: 0.78,
+    },
+    backToStoryLinkPressed: {
+      opacity: theme.opacity.pressed,
+    },
+    backToStoryLinkLabel: {
+      opacity: 0.62,
+      letterSpacing: 0.15,
     },
   });
 }

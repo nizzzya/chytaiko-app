@@ -4,6 +4,7 @@ import { hydrateFavorites } from '../../favorites/services/mockFavoritesService'
 import { hydrateReaderCache } from '../../reader/services/readerCacheService';
 import { hydrateReaderSettings } from '../../reader/services/readerSettingsService';
 import { hydrateReadingProgress } from '../../reader/services/mockReadingProgressService';
+import { hydrateThemePreference } from './themePreferenceService';
 
 type HydrationListener = () => void;
 
@@ -89,6 +90,7 @@ export function initializeAppHydration(): Promise<void> {
         hydrateReaderCache(),
         hydrateReaderSettings(),
         hydrateLibraryModeHistory(),
+        hydrateThemePreference(),
       ])
         .then(() => {
           notifyLocalDataHydrated();

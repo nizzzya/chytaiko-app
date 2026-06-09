@@ -7,6 +7,30 @@ Source of Truth: This document is the absolute reference for product, architectu
 
 ---
 
+# Design Source of Truth
+
+The visual, UX and product design source of truth for Chytayko is:
+
+`PRODUCT_DESIGN_CONSTITUTION.md`
+
+This document defines:
+
+- Product vision
+- UX principles
+- Design principles
+- Illustration system
+- Character system
+- Color system
+- Typography system
+- Approved screen references
+- Future design governance
+
+All future UI and UX changes must comply with the approved references documented in `PRODUCT_DESIGN_CONSTITUTION.md`.
+
+If a new design proposal conflicts with approved screen references, `PRODUCT_DESIGN_CONSTITUTION.md` takes precedence.
+
+---
+
 # 1. Product Vision
 
 Chytayko is a mobile application for parents and children (4+ years).
